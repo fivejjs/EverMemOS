@@ -1,0 +1,16 @@
+---
+globs: *.py
+alwaysApply: false
+---
+
+Python 编码规范
+
+1.  **Python datetime 使用规范:**
+    -   禁止直接使用 `datetime` 模块，特别是 `datetime.datetime.now()`
+    -   必须通过 `from utils.datetime_utils import to_iso_format, get_now_with_timezone` 来使用
+    -   使用 `get_now_with_timezone()` 获取当前时间（带时区信息）
+    -   使用 `to_iso_format()` 进行时间格式化
+    -   确保所有时间相关操作都使用项目统一的时间工具函数
+
+2.  **Python 禁止使用__init__.py文件**
+    - [VERY IMPORTANT] __init__.py 文件只用来当作包的标识，禁止在 __init__.py 文件中写任何代码

@@ -1,0 +1,354 @@
+---
+description: 
+globs: backend/src/**
+alwaysApply: false
+---
+# Backend 目录结构规范
+
+本文档描述了 memsys backend 项目的目录结构及各个目录的职责和用途。
+
+## 整体架构概述
+
+Backend 采用六边形架构(Hexagonal Architecture)和分层架构相结合的设计模式，主要分为：
+- **API层**: 对外提供API服务，包含记忆存储和检索API
+- **业务层**: 业务逻辑处理，包含具体的业务场景实现
+- **决策层**: 决策引擎，包含图结构和节点处理
+- **记忆层**: 记忆管理核心，包含记忆提取、处理和管理
+- **存储层**: 数据存储实现，包含动态和静态记忆存储
+- **检索层**: 记忆检索实现，包含多种检索算法和方法
+- **基础设施层**: 六边形架构的适配器实现，包含入站和出站适配器
+- **Core层**: 核心基础设施，包含DI容器、中间件、生命周期管理等
+- **Component层**: 可重用组件和服务提供者
+- **Config层**: 配置文件管理
+- **Common Utils层**: 通用工具函数
+
+## 目录结构示例
+
+```
+memsys/
+├── pyproject.toml                    # Python 项目配置和依赖管理
+├── config.json                       # 主配置文件
+├── migrations/                       # 数据库迁移脚本
+└── src/                              # 主要源代码目录
+    ├── app.py                        # 业务应用入口
+    ├── base_app.py                   # 基础应用配置
+    ├── application_startup.py        # 应用启动初始化
+    │
+    ├── api_layer/                    # API层 - 对外接口
+    │   ├── memorize_api/             # 记忆存储API
+    │   │   ├── memory_api.py         # 记忆API实现
+    │   │   ├── simple_api.py         # 简化API
+    │   │   ├── auth.py               # 认证模块
+    │   │   └── config.py             # API配置
+    │   ├── retrieve_api/             # 记忆检索API
+    │   │   ├── retrieve_api.py       # 检索API实现
+    │   │   ├── simple_retrieve_api.py # 简化检索API
+    │   │   └── client.py             # 客户端
+    │   └── start_memorize_api.py     # API启动脚本
+    │
+    ├── biz_layer/                    # 业务层
+    │   └── tanka_memorize.py         # Tanka记忆业务逻辑
+    │
+    ├── decision_layer/               # 决策层 - 图结构处理
+    │   ├── graph.py                  # 图结构定义
+    │   ├── nodes.py                  # 节点处理
+    │   ├── state.py                  # 状态管理
+    │   ├── tools.py                  # 决策工具
+    │   └── prompts.py                # 决策提示词
+    │
+    ├── memory_layer/                 # 记忆层 - 记忆管理核心
+    │   ├── memory_manager.py         # 记忆管理器
+    │   ├── memcell_extractor/        # 记忆单元提取器
+    │   │   ├── conv_memcell_extractor.py      # 对话记忆提取
+    │   │   ├── email_memcell_extractor.py     # 邮件记忆提取
+    │   │   └── linkdoc_memcell_extractor.py   # 链接文档记忆提取
+    │   ├── memory_extractor/         # 记忆提取器
+    │   │   ├── episode_memory_extractor.py    # 情节记忆提取
+    │   │   └── profile_memory_extractor.py    # 档案记忆提取
+    │   ├── llm/                      # LLM提供者
+    │   │   └── openai_provider.py    # OpenAI提供者
+    │   └── prompts/                  # 记忆提示词
+    │
+    ├── storage_layer/                # 存储层 - 数据存储
+    │   ├── dynamic_memory/           # 动态记忆存储
+    │   │   ├── main/                 # 主要逻辑
+    │   │   │   ├── action/           # 动作处理
+    │   │   │   ├── llm/              # LLM提供者
+    │   │   │   └── prompt/           # 提示词
+    │   │   └── config_manager.py     # 配置管理
+    │   ├── dynamic_memory_storage.py # 动态记忆存储实现
+    │   ├── static_memory_storage.py  # 静态记忆存储实现
+    │   └── json_memory_storage.py    # JSON记忆存储实现
+    │
+    ├── retrieval_layer/              # 检索层 - 记忆检索
+    │   ├── retriever.py              # 检索器主接口
+    │   ├── rerank.py                 # 重排序
+    │   └── methods/                  # 检索方法
+    │       ├── vector_search.py      # 向量检索
+    │       ├── keyword_search.py     # 关键词检索
+    │       ├── hybrid_search.py      # 混合检索
+    │       ├── hipporag/             # HippoRAG算法
+    │       └── nemori/               # Nemori检索系统
+    │
+    ├── infra_layer/                  # 基础设施层 - 六边形架构适配器
+    │   ├── adapters/                 # 适配器
+    │   │   ├── in/                   # 入站适配器
+    │   │   │   ├── api/              # API适配器
+    │   │   │   ├── mcp/              # MCP适配器
+    │   │   │   └── mq/               # 消息队列适配器
+    │   │   └── out/                  # 出站适配器
+    │   │       └── persistence/      # 持久化适配器
+    │   │           ├── document/     # 文档存储
+    │   │           └── repository/   # 仓储实现
+    │   └── scripts/                  # 脚本工具
+    │
+    ├── core/                         # 核心基础设施
+    │   ├── di/                       # 依赖注入容器
+    │   ├── middleware/               # 中间件
+    │   ├── authorize/                # 授权策略
+    │   ├── cache/                    # 缓存管理
+    │   ├── asynctasks/               # 异步任务管理
+    │   ├── context/                  # 上下文管理
+    │   ├── capability/               # 应用能力
+    │   ├── constants/                # 常量定义
+    │   ├── interface/                # 接口控制器
+    │   ├── lifespan/                 # 生命周期管理
+    │   ├── observation/              # 日志观测
+    │   └── oxm/                      # 对象映射
+    │       ├── mongo/                # MongoDB映射
+    │       └── pg/                   # PostgreSQL映射
+    │
+    ├── component/                    # 可重用组件
+    │   ├── auth_provider.py          # 认证提供者
+    │   ├── config_provider.py        # 配置提供者
+    │   ├── database_*_provider.py    # 数据库相关提供者
+    │   ├── redis_provider.py         # Redis提供者
+    │   ├── mongodb_client_factory.py # MongoDB客户端工厂
+    │   ├── openai_compatible_client.py # OpenAI兼容客户端
+    │   └── llm_adapter/              # LLM适配器
+    │       └── llm/                  # LLM实现
+    │
+    ├── config/                       # 配置文件目录
+    │   └── llm_backends.yaml         # LLM后端配置
+    │
+    ├── common_utils/                 # 通用工具
+    │   ├── datetime_utils.py         # 时间工具
+    │   ├── file_utils.py             # 文件工具
+    │   ├── text_utils.py             # 文本工具
+    │   ├── base62_utils.py           # Base62编码工具
+    │   ├── url_extractor.py          # URL提取工具
+    │   └── load_env.py               # 环境变量加载
+    │
+    ├── utils/                        # 项目工具
+    │   └── config.py                 # 配置工具
+    │
+    ├── migrations/                   # 数据迁移
+    ├── manage.py                     # 管理脚本
+    ├── migrate.py                    # 迁移脚本
+    ├── run.py                        # 运行脚本
+    └── task.py                       # 任务脚本
+```
+
+## 各层职责说明
+
+### API层 (`src/api_layer/`)
+- **用途**: 对外提供API服务，是系统的入口点
+- **职责**: 
+  - **memorize_api/**: 记忆存储API服务，处理记忆数据的存储请求
+  - **retrieve_api/**: 记忆检索API服务，处理记忆数据的查询请求
+  - **start_memorize_api.py**: API服务启动脚本
+  - 提供RESTful接口，处理HTTP请求和响应
+  - 包含认证、配置、客户端等支持模块
+
+### 业务层 (`src/biz_layer/`)
+- **用途**: 业务逻辑处理层，封装具体的业务场景
+- **职责**:
+  - **tanka_memorize.py**: Tanka记忆业务逻辑实现
+  - 处理特定业务场景的逻辑
+  - 协调各个层次完成业务功能
+
+### 决策层 (`src/decision_layer/`)
+- **用途**: 决策引擎，基于图结构进行决策处理
+- **职责**:
+  - **graph.py**: 图结构定义和管理
+  - **nodes.py**: 节点处理逻辑
+  - **state.py**: 状态管理和转换
+  - **tools.py**: 决策支持工具
+  - **prompts.py**: 决策相关的提示词模板
+
+### 记忆层 (`src/memory_layer/`)
+- **用途**: 记忆管理核心，负责记忆的提取、处理和管理
+- **职责**:
+  - **memory_manager.py**: 记忆管理器，统一管理记忆操作
+  - **memcell_extractor/**: 记忆单元提取器，从不同来源提取记忆单元
+    - 对话记忆提取、邮件记忆提取、链接文档记忆提取
+  - **memory_extractor/**: 记忆提取器，提取不同类型的记忆
+    - 情节记忆提取、档案记忆提取
+  - **llm/**: LLM提供者，支持记忆处理的AI能力
+  - **prompts/**: 记忆处理相关的提示词模板
+
+### 存储层 (`src/storage_layer/`)
+- **用途**: 数据存储实现，提供多种记忆存储方案
+- **职责**:
+  - **dynamic_memory/**: 动态记忆存储系统
+    - 包含动作处理、LLM提供者、提示词管理
+    - 支持记忆的动态更新和管理
+  - **static_memory_storage.py**: 静态记忆存储实现
+  - **json_memory_storage.py**: JSON格式记忆存储
+  - **dynamic_memory_storage.py**: 动态记忆存储主实现
+  - 提供不同存储策略和格式支持
+
+### 检索层 (`src/retrieval_layer/`)
+- **用途**: 记忆检索实现，提供多种检索算法和方法
+- **职责**:
+  - **retriever.py**: 检索器主接口
+  - **rerank.py**: 检索结果重排序
+  - **methods/**: 多种检索方法实现
+    - **vector_search.py**: 向量检索
+    - **keyword_search.py**: 关键词检索  
+    - **hybrid_search.py**: 混合检索
+    - **hipporag/**: HippoRAG算法实现
+    - **nemori/**: Nemori检索系统
+
+### 基础设施层 (`src/infra_layer/`)
+- **用途**: 六边形架构的适配器实现，处理外部系统集成
+- **职责**:
+  - **adapters/in/**: 入站适配器，处理外部请求
+    - **api/**: API适配器
+    - **mcp/**: MCP(Model Context Protocol)适配器
+    - **mq/**: 消息队列适配器
+  - **adapters/out/**: 出站适配器，处理外部系统调用
+    - **persistence/**: 持久化适配器，包含文档存储和仓储实现
+  - **scripts/**: 基础设施相关脚本
+
+### Core层 (`src/core/`)
+- **用途**: 核心基础设施，为整个应用提供基础能力
+- **职责**:
+  - **di/**: 依赖注入容器，管理Bean生命周期和依赖关系
+  - **middleware/**: HTTP中间件（数据库会话、用户上下文、HMAC签名等）
+  - **authorize/**: 授权策略和装饰器
+  - **cache/**: 缓存管理器
+  - **asynctasks/**: 异步任务管理
+  - **context/**: 请求上下文管理
+  - **capability/**: 应用能力接口定义
+  - **constants/**: 常量和异常定义
+  - **interface/**: 接口控制器基础类
+  - **lifespan/**: 生命周期管理（数据库、MongoDB等）
+  - **observation/**: 日志和监控
+  - **oxm/**: 对象关系映射（MongoDB和PostgreSQL）
+
+### Component层 (`src/component/`)
+- **用途**: 可重用的组件和服务提供者
+- **职责**:
+  - **auth_provider.py**: 认证服务提供者
+  - **config_provider.py**: 配置服务提供者
+  - **database_*_provider.py**: 数据库相关服务提供者
+  - **redis_provider.py**: Redis服务提供者
+  - **mongodb_client_factory.py**: MongoDB客户端工厂
+  - **openai_compatible_client.py**: OpenAI兼容客户端
+  - **llm_adapter/**: LLM适配器，支持多种LLM提供商
+  - 封装第三方服务集成，提供统一接口
+
+### Config层 (`src/config/`)
+- **用途**: 配置文件管理
+- **职责**:
+  - **llm_backends.yaml**: LLM后端配置
+  - 系统配置文件管理
+
+### Common Utils层 (`src/common_utils/`)
+- **用途**: 通用工具函数库
+- **职责**:
+  - **datetime_utils.py**: 时间处理工具（符合项目时间规范）
+  - **file_utils.py**: 文件操作工具
+  - **text_utils.py**: 文本处理工具
+  - **base62_utils.py**: Base62编码工具
+  - **url_extractor.py**: URL提取工具
+  - **load_env.py**: 环境变量加载工具
+  - **config.py**: 配置相关工具
+
+### Utils层 (`src/utils/`)
+- **用途**: 项目特定工具
+- **职责**:
+  - **config.py**: 项目配置工具
+  - 项目特定的工具函数
+
+## 开发规范
+
+### 依赖关系
+- **API层**: 作为系统入口，可以依赖业务层、记忆层等
+- **业务层**: 协调各个层次，可以依赖记忆层、存储层、检索层
+- **决策层**: 独立的决策引擎，可以被其他层调用
+- **记忆层**: 记忆管理核心，可以依赖存储层和基础设施层
+- **存储层**: 数据存储实现，依赖基础设施层
+- **检索层**: 检索实现，可以依赖存储层和基础设施层
+- **基础设施层**: 六边形架构适配器，处理外部系统集成
+- **Core层**: 为全局基础设施，可被任何层使用
+- **Component层**: 提供可重用组件，被其他层通过DI使用
+
+### 命名约定
+- **目录名**: 使用小写下划线分隔（如 `memory_layer`、`storage_layer`）
+- **文件名**: 使用小写下划线分隔（如 `memory_manager.py`、`vector_search.py`）
+- **类名**: 使用驼峰命名（如 `MemoryManager`、`VectorSearch`）
+- **接口**: 使用 Interface 前缀或 I 前缀（如 `IMemoryStorage`）
+- **实现类**: 使用具体描述的名称（如 `JsonMemoryStorage`）
+- **Provider类**: 使用 Provider 后缀（如 `DatabaseConnectionProvider`）
+
+### 应用启动流程
+1. **依赖注入扫描**: `application_startup.py` 扫描并注册所有组件
+2. **基础应用创建**: `base_app.py` 创建FastAPI基础配置
+3. **业务应用创建**: `app.py` 添加业务逻辑和路由
+4. **生命周期管理**: 数据库连接、MongoDB连接、系统初始化
+
+### 记忆系统开发规范
+- **记忆提取**: 使用不同的提取器处理不同类型的输入（对话、邮件、文档等）
+- **记忆存储**: 支持动态和静态记忆存储，提供多种存储格式
+- **记忆检索**: 实现多种检索算法（向量检索、关键词检索、混合检索等）
+- **决策处理**: 使用图结构进行复杂决策处理
+
+### 数据库操作规范
+- 支持多种数据库（MongoDB、PostgreSQL等）
+- 使用OXM（对象映射）进行数据访问
+- 通过Repository模式抽象数据访问
+- 事务管理通过中间件自动处理
+
+### LLM调用规范
+- 支持多种LLM提供商（OpenAI、Anthropic、Gemini等）
+- 使用适配器模式统一LLM接口
+- 在记忆层和存储层中集成LLM能力
+- 提供LLM配置管理
+
+### 六边形架构规范
+- **入站适配器**: 处理外部请求（API、MCP、消息队列）
+- **出站适配器**: 处理外部系统调用（持久化、外部服务）
+- **领域核心**: 记忆管理、存储、检索等核心逻辑
+- **适配器隔离**: 通过适配器隔离外部依赖，保持核心逻辑纯净
+
+## 注意事项
+
+### 开发注意点
+- **导入路径**: 后端运行时根目录是 `memsys/src/`，写import语句时要特别注意
+- **时间处理**: 必须使用 `common_utils.datetime_utils` 中的工具函数，禁止直接使用 `datetime.datetime.now()`
+- **依赖注入**: 优先使用DI容器管理依赖，避免硬编码依赖关系
+- **异常处理**: 使用项目定义的异常类，保持错误处理一致性
+- **记忆处理**: 遵循记忆系统的提取-存储-检索流程
+
+### 架构原则
+- **六边形架构**: 通过适配器隔离外部依赖，保持核心逻辑纯净
+- **分层架构**: 每层有明确职责，上层依赖下层，避免循环依赖
+- **单一职责**: 每个模块和类都应该有明确的单一职责
+- **开闭原则**: 通过接口和依赖注入支持扩展，减少修改
+- **依赖倒置**: 高层模块不依赖低层模块，都依赖抽象
+
+### 性能考虑
+- **记忆检索优化**: 使用多种检索算法提高检索效率
+- **缓存策略**: 合理使用缓存减少重复计算和检索
+- **异步处理**: 长时间的记忆处理任务使用异步队列
+- **连接池**: 数据库和Redis连接使用连接池管理
+- **批量操作**: 优化记忆数据的批量存储和检索
+
+### 扩展性设计
+- **适配器模式**: 通过适配器支持不同的外部系统集成
+- **配置驱动**: 通过配置文件控制LLM后端、存储方式等
+- **插件化检索**: 支持多种检索算法的插件化扩展
+- **多存储支持**: 支持多种存储后端（MongoDB、PostgreSQL、JSON等）
+- **监控观测**: 集成日志、指标和链路追踪

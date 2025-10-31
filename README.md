@@ -1,0 +1,388 @@
+<div align="center">
+  <h1>EverMemOS 🧠</h1>
+  <p><strong>Empowering AI with True Memory</strong> · Enterprise-Grade Intelligent Memory System</p>
+  <p>
+    <img alt="Python" src="https://img.shields.io/badge/Python-3.10+-blue.svg" />
+    <img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-green.svg" />
+    <img alt="Status" src="https://img.shields.io/badge/Status-Production-brightgreen.svg" />
+  </p>
+  <p>
+    <a href="README.md">English</a> | <a href="README_zh.md">简体中文</a>
+  </p>
+</div>
+
+> Make every conversation built on understanding.
+
+EverMemOS is a next-generation AI memory system designed for enterprises and organizations. It extracts, stores, and retrieves structured memories from massive conversational data, enabling AI assistants to truly understand users, groups, and business contexts.
+
+## 📢 Latest Updates
+
+<table>
+<tr>
+<td width="100%" style="border: none;">
+
+[2025-10-28] **🎉 v1.0.0 First Stable Release!**
+
+- ✨ **Stable Version**: AI Memory System code is now open source!
+- 📚 **Complete Documentation**: Quick start guide and API documentation
+
+</td>
+</tr>
+</table>
+
+---
+🎯 **Core Vision**: Build AI memory that never forgets, making every conversation built on previous understanding.
+
+💡 **Unique Advantages**:
+- 🧠 **Multi-Level Memory Extraction** - Comprehensive capture of episodic memory, user profiles, and group characteristics
+- 🔍 **Intelligent Retrieval Fusion** - Keyword, vector, hybrid search + Rerank reordering
+- 💾 **Multi-Storage Architecture** - Integrated MongoDB + Elasticsearch + Milvus storage
+- 🏗️ **Layered Design** - Clear separation: Agentic → Memory → Business → Infrastructure
+
+## 📑 Table of Contents
+
+<div align="center">
+<table>
+<tr>
+<td width="50%" valign="top">
+
+- [📖 Project Introduction](#-project-introduction)
+- [🎯 Core Concepts](#-core-concepts)
+- [📁 Project Structure](#-project-structure)
+- [🚀 Quick Start](#-quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [How to Use](#how-to-use)
+  - [More Details](#more-details)
+
+</td>
+<td width="50%" valign="top">
+
+- [📚 Documentation](#-documentation)
+  - [Developer Docs](#developer-docs)
+  - [API Documentation](#api-documentation)
+  - [Core Framework](#core-framework)
+- [🏗️ Architecture Design](#️-architecture-design)
+- [🤝 Contributing](#-contributing)
+- [🌟 Join Us](#-join-us)
+- [🙏 Acknowledgments](#-acknowledgments)
+
+</td>
+</tr>
+</table>
+</div>
+
+---
+
+## 📖 Project Introduction
+
+**EverMemOS** is an open-source project designed to provide long-term memory capabilities to conversational AI agents. This codebase is the official implementation of the paper "EverMemOS". It extracts, structures, and retrieves information from conversations, enabling agents to maintain context, recall past interactions, and progressively build user profiles. This results in more personalized, coherent, and intelligent conversations.
+
+## 🎯 Core Concepts
+
+- **MemCell (Memory Cell):** An atomic unit of memory extracted from conversations. It represents a single piece of information, such as a fact, an event, or a user preference.
+- **User Profile:** A structured summary of a user's characteristics, preferences, and history, aggregated from multiple MemCells.
+- **Memory Extraction:** A pipeline that processes raw conversation logs, identifies meaningful segments, and converts them into structured MemCells and User Profiles.
+- **Memory-Enhanced Conversation:** The process of leveraging extracted memories to provide relevant context to Large Language Models (LLMs), enabling them to generate more informed and personalized responses.
+
+## 📁 Project Structure
+
+<details>
+<summary>Expand/Collapse Directory Structure</summary>
+
+```
+memsys-opensource/
+├── src/                              # Source code directory
+│   ├── agentic_layer/                # Agentic layer - unified memory interface
+│   ├── memory_layer/                 # Memory layer - memory extraction
+│   │   ├── memcell_extractor/        # MemCell extractor
+│   │   ├── memory_extractor/         # Memory extractor
+│   │   └── prompts/                  # LLM prompt templates
+│   ├── retrieval_layer/              # Retrieval layer - memory retrieval
+│   ├── biz_layer/                    # Business layer - business logic
+│   ├── infra_layer/                  # Infrastructure layer
+│   ├── core/                         # Core functionality (DI/lifecycle/middleware)
+│   ├── component/                    # Components (LLM adapters, etc.)
+│   └── common_utils/                 # Common utilities
+├── demo/                             # Demo code → [📖 Demo Guide](demo/README.md)
+├── data/                             # Sample conversation data → [📊 Data Guide](data/README.md)
+├── evaluation/                       # Evaluation scripts
+├── data_format/                      # Data format definitions
+├── docs/                             # Documentation
+├── config.json                       # Configuration file
+├── env.template                      # Environment variable template
+├── pyproject.toml                    # Project configuration
+└── README.md                         # Project description
+```
+
+</details>
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.10+
+- uv (recommended package manager)
+- [MongoDB Installation Guide](docs/usage/MONGODB_GUIDE.md), Redis, Elasticsearch, Milvus (optional)
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/memsys_opensource.git
+cd memsys_opensource
+
+# 2. Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 3. Install project dependencies
+uv sync
+
+# 4. Configure environment variables
+cp env.template .env
+# Edit the .env file and fill in the necessary configurations:
+#   - LLM_API_KEY: Defaults to OpenRouter. Please enter your OpenRouter API Key.
+#   - DEEPINFRA_API_KEY: Enter your DeepInfra API Key for Embedding and Rerank services.
+#   - Other databases (MongoDB/Redis/ES/Milvus) should be configured according to your local or remote deployment.
+
+```
+
+
+### How to Use
+
+#### 1. Run Demo: Memory Extraction and Interactive Chat
+
+The demo showcases the end-to-end functionality of EverMemOS.
+
+**Step 1: Extract Memories**
+
+Run the memory extraction script to process sample conversation data and build the memory database:
+
+```bash
+python demo/extract_memory.py
+```
+
+This script will:
+- Read conversation data from the `data/` directory
+- Extract MemCells and save them to the configured database (e.g., MongoDB)
+- Generate user profiles and save them to `demo/memcell_outputs/` directory
+
+> **💡 Tip**:
+> By default, the script extracts memories for the **ASSISTANT** scenario. You can optionally extract memories for the **GROUP_CHAT** scenario:
+> 1. Open the `demo/extract_memory.py` file.
+> 2. Locate the `EXTRACT_CONFIG` section.
+> 3. Change `scenario_type` from `ScenarioType.ASSISTANT` to `ScenarioType.GROUP_CHAT`.
+> 4. Run the extraction script again.
+>
+> You can run either one or both scenarios.
+
+**Step 2: Chat with Memory**
+
+After extracting memories, start the interactive chat demo:
+
+```bash
+python demo/chat_with_memory.py
+```
+
+This will launch a command-line interface where you can converse with an agent that utilizes the just-extracted memories. For more details on chat features, tips, and suggested questions, please see the [Demo Guide](demo/README.md).
+
+#### 2. Run Evaluation: Performance Testing
+
+The evaluation framework provides a systematic way to measure the performance of the memory system, based on the LoCoMo evaluation dataset.
+
+```bash
+# Stage 1: MemCell Extraction
+python evaluation/locomo_evaluation/stage1_memcells_extraction.py
+
+# Stage 2: Index Building
+python evaluation/locomo_evaluation/stage2_index_building.py
+
+# Stage 3: Memory Retrieval
+python evaluation/locomo_evaluation/stage3_memory_retrivel.py
+
+# Stage 4: Response Generation
+python evaluation/locomo_evaluation/stage4_response.py
+
+# Stage 5: Evaluation
+python evaluation/locomo_evaluation/stage5_eval.py
+```
+
+Each script corresponds to a stage in the evaluation pipeline, from data processing to performance scoring.
+
+> **⚙️ Evaluation Configuration**:
+> Before running the evaluation, you can modify the `evaluation/locomo_evaluation/config.py` file to adjust the experiment settings:
+> - **`ExperimentConfig.experiment_name`**: Change this to alter the save directory for the results.
+> - **`ExperimentConfig.llm_service`**: Select the LLM service to use (e.g., `"openai"` or `"vllm"`).
+> - **`ExperimentConfig.llm_config`**: Configure parameters for the selected LLM service in this dictionary, such as the model, `base_url`, and `api_key`.
+
+#### 3. Call API Endpoints
+
+Use V3 API to store single message memory:
+
+```bash
+curl -X POST http://localhost:1995/api/v3/agentic/memorize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message_id": "msg_001",
+    "create_time": "2025-02-01T10:00:00+08:00",
+    "sender": "user_103",
+    "sender_name": "Chen",
+    "content": "We need to complete the product design this week",
+    "group_id": "group_001",
+    "group_name": "Project Discussion Group"
+  }'
+```
+
+#### 4. Batch Store Group Chat Memory
+
+EverMemOS supports a standardized group chat data format ([GroupChatFormat](data_format/group_chat/group_chat_format.md)). You can use scripts for batch storage:
+
+```bash
+# Use script for batch storage
+uv run python src/bootstrap.py src/run_memorize.py \
+  --input data/group_chat.json \
+  --api-url http://localhost:1995/api/v3/agentic/memorize
+
+# Validate file format
+uv run python src/bootstrap.py src/run_memorize.py \
+  --input data/group_chat.json \
+  --validate-only
+```
+
+**GroupChatFormat Example**:
+
+```json
+{
+  "version": "1.0.0",
+  "conversation_meta": {
+    "group_id": "group_001",
+    "name": "Project Discussion Group",
+    "user_details": {
+      "user_101": {
+        "full_name": "Alice",
+        "role": "Product Manager"
+      }
+    }
+  },
+  "conversation_list": [
+    {
+      "message_id": "msg_001",
+      "create_time": "2025-02-01T10:00:00+08:00",
+      "sender": "user_101",
+      "content": "Good morning everyone"
+    }
+  ]
+}
+```
+
+For complete format specifications, please refer to [Group Chat Format Specification](data_format/group_chat/group_chat_format.md).
+
+### More Details
+
+For detailed installation, configuration, and usage instructions, please refer to:
+- 📚 [Quick Start Guide](docs/dev_docs/getting_started.md) - Complete installation and configuration steps
+- 📖 [API Usage Guide](docs/dev_docs/api_usage_guide.md) - API endpoints and data format details
+- 🔧 [Development Guide](docs/dev_docs/development_guide.md) - Architecture design and development best practices
+- 🚀 [Bootstrap Usage](docs/dev_docs/bootstrap_usage.md) - Script runner usage instructions
+- 📝 [Group Chat Format Specification](data_format/group_chat/group_chat_format.md) - Standardized data format
+
+## 📚 Documentation
+
+### Developer Docs
+- [Quick Start Guide](docs/dev_docs/getting_started.md) - Installation, configuration, and startup
+- [Development Guide](docs/dev_docs/development_guide.md) - Architecture design and best practices
+- [Bootstrap Usage](docs/dev_docs/bootstrap_usage.md) - Script runner
+- [Dependency Management](docs/dev_docs/project_deps_manage.md) - Package management and version control
+
+### API Documentation
+- [Agentic V3 API](docs/api_docs/agentic_v3_api.md) - Agentic layer API
+- [Agentic V2 API](docs/api_docs/agentic_v2_api.md) - Agentic layer API (legacy)
+
+### Core Framework
+- [Dependency Injection Framework](src/core/di/README.md) - DI container usage guide
+
+### Demos & Evaluation
+- [📖 Demo Guide](demo/README.md) - Interactive examples and memory extraction demos
+- [📊 Data Guide](data/README.md) - Sample conversation data and format specifications
+
+## 🏗️ Architecture Design
+
+EverMemOS adopts a layered architecture design, mainly including:
+
+- **Agentic Layer**: Memory extraction, vectorization, retrieval, and reranking
+- **Memory Layer**: MemCell extraction, episodic memory management
+- **Retrieval Layer**: Multi-modal retrieval and result ranking
+- **Business Layer**: Business logic and data operations
+- **Infrastructure Layer**: Database, cache, message queue adapters, etc.
+- **Core Framework**: Dependency injection, middleware, queue management, etc.
+
+For more architectural details, please refer to the [Development Guide](docs/dev_docs/development_guide.md).
+
+## 🤝 Contributing
+
+We welcome all forms of contributions! Whether it's reporting bugs, proposing new features, or submitting code improvements.
+
+Before contributing, please read our [Contributing Guide](CONTRIBUTING.md) to learn about:
+- Development environment setup
+- Code standards and best practices
+- Git commit conventions (Gitemoji)
+- Pull Request process
+
+## 🌟 Join Us
+
+<!-- 
+This section can include:
+- Community communication channels (Discord, Slack, WeChat groups, etc.)
+- Technical discussion forums
+- Regular meeting information
+- Contact email
+-->
+
+We are building a vibrant open-source community!
+
+### Contact
+
+- **GitHub Issues**: [Submit issues and suggestions](https://github.com/your-org/memsys_opensource/issues)
+- **Discussions**: [Join discussions](https://github.com/your-org/memsys_opensource/discussions)
+- **Email**: [Contact email to be added]
+- **Community**: [Community link to be added]
+
+### Contributors
+
+Thanks to all the developers who have contributed to this project!
+
+<!-- Can use GitHub Contributors auto-generation -->
+<!-- <a href="https://github.com/your-org/memsys_opensource/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=your-org/memsys_opensource" />
+</a> -->
+
+## 📄 License
+
+This project is licensed under the [Apache License 2.0](LICENSE). This means you are free to use, modify, and distribute this project, with the following key conditions:
+- You must include a copy of the Apache 2.0 license
+- You must state any significant changes made to the code
+- You must retain all copyright, patent, trademark, and attribution notices
+- If a NOTICE file is included, you must include it in your distribution
+
+## 🙏 Acknowledgments
+
+<!-- 
+This section can include:
+- Projects that inspired us
+- Open-source libraries used
+- Supporting organizations or individuals
+-->
+
+Thanks to the following projects and communities for their inspiration and support:
+
+- (To be added)
+
+---
+
+<div align="center">
+
+**If this project helps you, please give us a ⭐️**
+
+Made with ❤️ by the EverMemOS Team
+
+</div>

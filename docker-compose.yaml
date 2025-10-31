@@ -1,0 +1,264 @@
+version: '3.8'
+
+services:
+  # MongoDB 数据库
+  mongodb:
+    image: mongo:7.0
+    container_name: memsys-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: memsys123
+      MONGO_INITDB_DATABASE: memsys
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - memsys-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Elasticsearch 搜索引擎
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: memsys-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - memsys-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Milvus 向量数据库
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: memsys-milvus-etcd
+    restart: unless-stopped
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - milvus_etcd_data:/etcd
+    networks:
+      - memsys-network
+
+  milvus-minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    container_name: memsys-milvus-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    volumes:
+      - milvus_minio_data:/minio_data
+    networks:
+      - memsys-network
+
+  milvus-standalone:
+    image: milvusdb/milvus:v2.3.4
+    container_name: memsys-milvus-standalone
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      MINIO_ADDRESS: milvus-minio:9000
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+      start_period: 90s
+    depends_on:
+      - milvus-etcd
+      - milvus-minio
+    networks:
+      - memsys-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7.2-alpine
+    container_name: memsys-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - memsys-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # PostgreSQL 数据库 (用于LangGraph检查点)
+  postgresql:
+    image: postgres:15-alpine
+    container_name: memsys-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: memsys
+      POSTGRES_USER: memsys
+      POSTGRES_PASSWORD: memsys123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - memsys-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U memsys -d memsys"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Memsys 主应用
+  memsys-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memsys-app
+    restart: unless-stopped
+    ports:
+      - "1995:1995"
+    environment:
+      # MongoDB 配置
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: 27017
+      MONGODB_USERNAME: admin
+      MONGODB_PASSWORD: memsys123
+      MONGODB_DATABASE: memsys
+      
+      # Elasticsearch 配置
+      ES_HOSTS: http://elasticsearch:9200
+      ES_USERNAME: ""
+      ES_PASSWORD: ""
+      ES_VERIFY_CERTS: false
+      SELF_ES_INDEX_NS: memsys
+      
+      # Milvus 配置
+      MILVUS_HOST: milvus-standalone
+      MILVUS_PORT: 19530
+      SELF_MILVUS_COLLECTION_NS: memsys
+      
+      # Redis 配置
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 8
+      REDIS_SSL: false
+      
+      # PostgreSQL 配置 (LangGraph检查点)
+      POSTGRES_HOST: postgresql
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: memsys
+      POSTGRES_USER: memsys
+      POSTGRES_PASSWORD: memsys123
+      
+      # 应用配置
+      LOG_LEVEL: INFO
+      ENV: production
+      PYTHONASYNCIODEBUG: 0
+      
+      # LLM 配置 (需要用户自己配置)
+      CONV_MEMCELL_LLM_PROVIDER: openai
+      CONV_MEMCELL_LLM_MODEL: gpt-3.5-turbo
+      CONV_MEMCELL_LLM_API_KEY: ${CONV_MEMCELL_LLM_API_KEY:-your-api-key-here}
+      
+      EPISODE_MEMORY_LLM_PROVIDER: openai
+      EPISODE_MEMORY_LLM_MODEL: gpt-3.5-turbo
+      EPISODE_MEMORY_LLM_API_KEY: ${EPISODE_MEMORY_LLM_API_KEY:-your-api-key-here}
+      
+      # DeepInfra 配置 (可选)
+      DEEPINFRA_API_KEY: ${DEEPINFRA_API_KEY:-}
+      DEEPINFRA_BASE_URL: ${DEEPINFRA_BASE_URL:-http://0.0.0.0:11000/v1}
+      DEEPINFRA_EMBEDDING_MODEL: ${DEEPINFRA_EMBEDDING_MODEL:-Qwen3-Embedding-4B}
+      
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    networks:
+      - memsys-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1995/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  mongodb_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  milvus_etcd_data:
+    driver: local
+  milvus_minio_data:
+    driver: local
+  milvus_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgresql_data:
+    driver: local
+
+networks:
+  memsys-network:
+    driver: bridge

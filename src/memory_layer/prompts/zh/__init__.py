@@ -1,0 +1,2 @@
+# Chinese language prompts package
+
