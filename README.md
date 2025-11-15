@@ -344,6 +344,8 @@ This script performs the following actions:
 - Loads `data/assistant_chat_zh.json`, appends `scene="assistant"` to each message, and streams every entry to `http://localhost:8001/api/v3/agentic/memorize`. Update the `base_url`, `data_file`, or `profile_scene` constants in `demo/extract_memory.py` if you host the API on another endpoint or want to ingest a different scenario.
 - Writes through the HTTP API only: MemCells, episodes, and profiles are created inside your databases, not under `demo/memcell_outputs/`. Inspect MongoDB (and Milvus/Elasticsearch) to verify ingestion or proceed directly to the chat demo.
 
+> **💡 Tip**: For detailed configuration instructions and usage guide, please refer to the [Demo Documentation](demo/README.md).
+
 **Step 2: Chat with Memory**
 
 After extracting memories, start the interactive chat demo:
@@ -466,6 +468,9 @@ curl -X POST http://localhost:8001/api/v3/agentic/memorize \
 ```
 
 </details>
+
+> ℹ️ `scene` is a required field, only supports `assistant` or `group_chat`, used to specify memory extraction strategy.
+> ℹ️ By default, all memory types are extracted and stored
 
 **API Features**:
 

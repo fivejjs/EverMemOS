@@ -337,13 +337,11 @@ uv run python src/bootstrap.py demo/extract_memory.py
 ```
 
 该脚本将：
-- 从 `data/` 目录读取对话数据
-- 提取记忆单元并保存到配置的数据库中（例如 MongoDB）
-- 生成用户画像并保存到 `demo/memcell_outputs/` 目录
+- 调用 `demo.tools.clear_all_data.clear_all_memories()`，确保演示从空的 MongoDB/Elasticsearch/Milvus/Redis 状态开始。在执行脚本前请确保 `docker-compose` 启动的依赖服务正在运行，否则清理步骤会失败。
+- 加载 `data/assistant_chat_zh.json`，为每条消息添加 `scene="assistant"`，并将每条记录流式发送到 `http://localhost:8001/api/v3/agentic/memorize`。如果您在其他端点托管 API 或想要导入不同的场景，可以更新 `demo/extract_memory.py` 中的 `base_url`、`data_file` 或 `scene` 常量。
+- 仅通过 HTTP API 写入：MemCell、情节和画像都在数据库中创建，而不是保存在 `demo/memcell_outputs/` 目录下。可以检查 MongoDB（以及 Milvus/Elasticsearch）验证数据摄入，或直接进入聊天演示。
 
-> **💡 提示**:
-> 配置非常简单！`extract_memory.py` 使用 HTTP API，只需 2 个参数即可运行。
-> 详细的配置说明和使用指南请参阅 [Demo 文档](demo/README_zh.md)。
+> **💡 提示**: 详细的配置说明和使用指南请参阅 [Demo 文档](demo/README_zh.md)。
 
 **步骤 2: 与记忆聊天**
 
@@ -354,19 +352,18 @@ uv run python src/bootstrap.py demo/extract_memory.py
 uv run python src/bootstrap.py demo/chat_with_memory.py
 ```
 
-这将启动一个命令行界面，您可以与一个利用了刚提取的记忆的智能体进行对话。更多关于聊天功能的使用技巧和推荐问题，请参阅 [Demo 指南](demo/README_zh.md)。
+该程序通过 `python-dotenv` 加载 `.env` 文件，验证至少一个 LLM 密钥（`LLM_API_KEY`、`OPENROUTER_API_KEY` 或 `OPENAI_API_KEY`）可用，并通过 `demo.utils.ensure_mongo_beanie_ready` 连接到 MongoDB 以枚举已包含 MemCell 的群组。每个用户查询都会调用 `api/v3/agentic/retrieve_lightweight`，除非您明确选择 Agentic 模式，在这种情况下，编排器会切换到 `api/v3/agentic/retrieve_agentic` 并警告额外的 LLM 延迟。
 
 **交互流程：**
-1. **选择语言**：在中文和 English 之间选择界面语言。
-2. **选择场景模式**：
-   - **助手模式**：单人对话，基于个人记忆的智能助手。
-   - **群聊模式**：多人群聊，基于群组记忆的对话分析。
-3. **选择对话群组**：从数据库中可用的群组中选择。
-4. **开始聊天**：与记忆增强的 AI 智能体互动。
+1. **选择语言**：选择中文或英文终端界面。
+2. **选择场景模式**：助手模式（一对一）或群聊模式（多人分析）。
+3. **选择对话群组**：通过 `query_all_groups_from_mongodb` 从 MongoDB 实时读取群组；请先运行提取步骤，以便列表非空。
+4. **选择检索模式**：`rrf`、`embedding`、`bm25` 或 LLM 引导的 Agentic 检索。
+5. **开始聊天**：提出问题，检查在每个响应之前显示的检索记忆，并使用 `help`、`clear`、`reload` 或 `exit` 管理会话。
 
 ---
 
-#### 📊 运行评估：性能测试
+#### 📊 运行评估：基准测试
 
 评估框架提供了一种统一的模块化方法来对标准数据集（LoCoMo、LongMemEval、PersonaMem）上的记忆系统进行基准测试。
 
@@ -469,6 +466,7 @@ curl -X POST http://localhost:8001/api/v3/agentic/memorize \
 
 </details>
 > ℹ️ `scene` 为必填字段，仅支持 `assistant` 或 `group_chat`，用于指定记忆提取策略。
+> ℹ️ 目前默认开启全部记忆种类提取和存储
 **API 功能说明**：
 
 - **`/api/v3/agentic/memorize`**: 存储单条消息记忆
