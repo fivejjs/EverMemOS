@@ -18,6 +18,9 @@ from core.di.decorators import repository
 
 logger = get_logger(__name__)
 
+# Milvus 检索配置（None 表示不启用半径过滤）
+MILVUS_SIMILARITY_RADIUS = None  # COSINE 相似度阈值，可选范围 [-1, 1]
+
 
 @repository("episodic_memory_milvus_repository", primary=False)
 class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollection]):
@@ -171,6 +174,8 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
         end_time: Optional[datetime] = None,
         limit: int = 10,
         score_threshold: float = 0.0,
+        radius: Optional[float] = None,
+        participant_user_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         向量相似性搜索
@@ -184,6 +189,7 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             end_time: 事件时间戳结束过滤
             limit: 返回结果数量
             score_threshold: 相似度阈值
+            radius: COSINE 相似度阈值（可选，默认使用 MILVUS_SIMILARITY_RADIUS）
 
         Returns:
             搜索结果列表
@@ -193,12 +199,13 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             filter_expr = []
             if user_id is not None:  # 使用 is not None 而不是 truthy 检查，支持空字符串
                 if user_id:  # 非空字符串：个人记忆
-                    # 同时检查 user_id 字段和 participants 数组
-                    # 使用 OR 逻辑：user_id 匹配 或者 user_id 在 participants 中
-                    user_filter = f'(user_id == "{user_id}" or array_contains(participants, "{user_id}"))'
-                    filter_expr.append(user_filter)
+                    filter_expr.append(f'user_id == "{user_id}"')
                 else:  # 空字符串：群组记忆
                     filter_expr.append('user_id == ""')
+            if participant_user_id:
+                filter_expr.append(
+                    f'array_contains(participants, "{participant_user_id}")'
+                )
             if group_id:
                 filter_expr.append(f'group_id == "{group_id}"')
             if event_type:
@@ -215,7 +222,17 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             # 执行搜索
             # 动态调整 ef 参数：必须 >= limit，通常设为 limit 的 1.5-2 倍
             ef_value = max(128, limit * 2)  # 确保 ef >= limit，至少 128
-            search_params = {"metric_type": "L2", "params": {"ef": ef_value}}
+            # 使用 COSINE 相似度，radius 表示只返回相似度 >= 阈值的结果
+            # 优先使用传入的 radius 参数，否则使用默认配置
+            similarity_radius = radius if radius is not None else MILVUS_SIMILARITY_RADIUS
+            search_params = {
+                "metric_type": "COSINE",
+                "params": {
+                    "ef": ef_value,
+                }
+            }
+            if similarity_radius is not None:
+                search_params["params"]["radius"] = similarity_radius
 
             results = await self.collection.search(
                 data=[query_vector],
@@ -307,9 +324,7 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             # 构建过滤表达式
             filter_expr = []
             if user_id:
-                # 同时检查 user_id 字段和 participants 数组
-                user_filter = f'(user_id == "{user_id}" or array_contains(participants, "{user_id}"))'
-                filter_expr.append(user_filter)
+                filter_expr.append(f'user_id == "{user_id}"')
             if group_id:
                 filter_expr.append(f'group_id == "{group_id}"')
             if start_time:

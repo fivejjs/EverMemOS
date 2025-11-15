@@ -172,6 +172,7 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
         size: int = 10,
         from_: int = 0,
         explain: bool = False,
+        participant_user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         使用 elasticsearch-dsl 的统一搜索接口，支持多词查询和全面过滤
@@ -188,6 +189,7 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
             size: 结果数量
             from_: 分页起始位置
             explain: 是否启用得分解释模式
+            participant_user_id: 群组检索时额外要求参与者包含该用户
 
         Returns:
             搜索结果的hits部分，包含匹配的文档数据
@@ -204,14 +206,11 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
             
             if user_id is not None:  # 使用 is not None 而不是 truthy 检查，支持空字符串
                 if user_id:  # 非空字符串：个人记忆
-                    # 同时检查 user_id 字段和 participants 数组
-                    user_filter = Q("bool", should=[
-                        Q("term", user_id=user_id),
-                        Q("term", participants=user_id)
-                    ], minimum_should_match=1)
-                    filter_queries.append(user_filter)
+                    filter_queries.append(Q("term", user_id=user_id))
                 else:  # 空字符串：群组记忆
                     filter_queries.append(Q("term", user_id=""))
+            if participant_user_id:
+                filter_queries.append(Q("term", participants=participant_user_id))
             if group_id:
                 filter_queries.append(Q("term", group_id=group_id))
             if keywords:

@@ -277,6 +277,10 @@ class AgenticV3Controller(BaseController):
           * "personal": 仅个人记忆（只使用 user_id 参数过滤，不使用 group_id）
           * "group": 仅群组记忆（只使用 group_id 参数过滤，不使用 user_id）
         - **current_time** (可选): 当前时间，YYYY-MM-DD格式，用于过滤有效期内的语义记忆（仅 data_source=semantic_memory 时有效）
+        - **radius** (可选): COSINE 相似度阈值，范围 [-1, 1]，默认 0.6
+          * 只返回相似度 >= radius 的结果
+          * 影响向量检索部分（embedding/rrf 模式）的结果质量
+          * 对语义记忆和情景记忆有效（semantic_memory/episode），事件日志使用 L2 距离暂不支持
         
         ## 返回格式：
         ```json
@@ -322,6 +326,7 @@ class AgenticV3Controller(BaseController):
             data_source = request_data.get("data_source", "episode")
             memory_scope = request_data.get("memory_scope", "all")
             current_time_str = request_data.get("current_time")  # YYYY-MM-DD格式
+            radius = request_data.get("radius")  # COSINE 相似度阈值（可选）
             
             if not query and data_source != "profile":
                 raise ValueError("缺少必需参数：query")
@@ -357,6 +362,7 @@ class AgenticV3Controller(BaseController):
                 data_source=data_source,
                 memory_scope=memory_scope,
                 current_time=current_time,
+                radius=radius,
             )
             
             # 3. 返回统一格式

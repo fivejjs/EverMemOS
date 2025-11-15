@@ -429,7 +429,7 @@ class MemoryManager:
 
             # 调用 Milvus 的向量搜索（根据记忆类型传递不同的参数）
             if retrieve_mem_request.memory_sub_type == "semantic_memory":
-                # 语义记忆：支持时间范围和有效期过滤
+                # 语义记忆：支持时间范围和有效期过滤，支持 radius 参数
                 search_results = await milvus_repo.vector_search(
                     query_vector=query_vector_list,
                     user_id=user_id,
@@ -438,9 +438,10 @@ class MemoryManager:
                     current_time=current_time_dt,
                     limit=top_k,
                     score_threshold=0.0,
+                    radius=retrieve_mem_request.radius,  # 从请求对象中获取相似度阈值参数
                 )
             else:
-                # 情景记忆和事件日志：使用 timestamp 过滤
+                # 情景记忆和事件日志：使用 timestamp 过滤，支持 radius 参数
                 search_results = await milvus_repo.vector_search(
                     query_vector=query_vector_list,
                     user_id=user_id,
@@ -448,6 +449,7 @@ class MemoryManager:
                     end_time=end_time_dt,
                     limit=top_k,
                     score_threshold=0.0,
+                    radius=retrieve_mem_request.radius,  # 从请求对象中获取相似度阈值参数
                 )
 
             logger.debug(f"Milvus向量搜索返回 {len(search_results)} 条结果")
@@ -585,7 +587,7 @@ class MemoryManager:
 
             # 调用 Milvus 的向量搜索（根据记忆类型传递不同的参数）
             if retrieve_mem_request.memory_sub_type == "semantic_memory":
-                # 语义记忆：支持时间范围和有效期过滤
+                # 语义记忆：支持时间范围和有效期过滤，支持 radius 参数
                 search_results = await milvus_repo.vector_search(
                     query_vector=query_vector_list,
                     user_id=user_id,
@@ -594,9 +596,10 @@ class MemoryManager:
                     current_time=current_time_dt,
                     limit=top_k,
                     score_threshold=0.0,
+                    radius=retrieve_mem_request.radius,  # 从请求对象中获取相似度阈值参数
                 )
             else:
-                # 情景记忆和事件日志：使用 timestamp 过滤
+                # 情景记忆和事件日志：使用 timestamp 过滤，支持 radius 参数
                 search_results = await milvus_repo.vector_search(
                     query_vector=query_vector_list,
                     user_id=user_id,
@@ -604,6 +607,7 @@ class MemoryManager:
                     end_time=end_time_dt,
                     limit=top_k,
                     score_threshold=0.0,
+                    radius=retrieve_mem_request.radius,  # 从请求对象中获取相似度阈值参数
                 )
             return search_results
         except Exception as e:
@@ -1077,6 +1081,7 @@ class MemoryManager:
         data_source: str = "episode",  # "episode" | "event_log" | "semantic_memory" | "profile"
         memory_scope: str = "all",  # "all" | "personal" | "group"
         current_time: Optional[datetime] = None,  # 当前时间，用于过滤有效期内的语义记忆
+        radius: Optional[float] = None,  # COSINE 相似度阈值
     ) -> Dict[str, Any]:
         """
         轻量级记忆检索（统一使用 Milvus/ES 检索）
@@ -1121,12 +1126,14 @@ class MemoryManager:
                 start_time=start_time,
             )
         
+        original_user_id = user_id
         # 处理 memory_scope 参数逻辑
         # - "personal": 只传递 user_id 参数（不传 group_id）
         # - "group": 只传递 group_id 参数，同时设置 user_id="" 来过滤群组记忆
         # - "all": user_id 和 group_id 都传递
         scope_user_id = user_id
         scope_group_id = group_id
+        participant_user_id: Optional[str] = None
         
         if memory_scope == "personal":
             # 个人记忆：只传递 user_id，不传 group_id
@@ -1137,7 +1144,16 @@ class MemoryManager:
                 scope_user_id = ""  # 空字符串表示群组 episode
             else:
                 scope_user_id = None  # 事件日志/语义记忆等只根据 group_id 过滤
-        # "all": 保持原样，都传递
+
+            if original_user_id and data_source in (
+                "episode",
+                "event_log",
+                "semantic_memory",
+            ):
+                participant_user_id = original_user_id
+        else:
+            # "all": 不按 user_id 过滤，避免漏掉群组记忆
+            scope_user_id = None
         
         return await self._retrieve_from_vector_stores(
             query=query,
@@ -1149,6 +1165,8 @@ class MemoryManager:
             start_time=start_time,
             memory_scope=memory_scope,
             current_time=current_time,
+                participant_user_id=participant_user_id,
+            radius=radius,
         )
     
     async def _retrieve_from_vector_stores(
@@ -1162,6 +1180,8 @@ class MemoryManager:
         start_time: float = None,
         memory_scope: str = "all",
         current_time: Optional[datetime] = None,
+        participant_user_id: Optional[str] = None,
+        radius: Optional[float] = None,
     ) -> Dict[str, Any]:
         """
         统一的向量存储检索方法（支持 embedding、bm25、rrf 三种模式）
@@ -1176,6 +1196,8 @@ class MemoryManager:
             start_time: 开始时间（用于计算耗时）
             memory_scope: 记忆范围（all/personal/group）
             current_time: 当前时间，用于过滤有效期内的语义记忆（仅 data_source=semantic_memory 时有效）
+            participant_user_id: 群组 episode/event_log/semantic 检索时，额外限定必须包含该参与者
+            radius: COSINE 相似度阈值（仅对非语义记忆有效）
             
         Returns:
             Dict 包含 memories, metadata
@@ -1213,29 +1235,33 @@ class MemoryManager:
                 retrieval_limit = max(top_k * 10, 100)  # 至少 100 条候选
                 
                 # 根据 data_source 调用不同的 vector_search 参数
+                milvus_kwargs = dict(
+                    query_vector=query_vec,
+                    user_id=user_id,
+                    group_id=group_id,
+                    limit=retrieval_limit,
+                    radius=radius,  # 传递相似度阈值参数
+                )
                 if data_source == "semantic_memory":
-                    # 语义记忆：支持 current_time 过滤有效期内的记忆
-                    milvus_results = await milvus_repo.vector_search(
-                        query_vector=query_vec,
-                        user_id=user_id,
-                        group_id=group_id,
-                        current_time=current_time,
-                        limit=retrieval_limit,
-                    )
-                else:
-                    # 情景记忆和事件日志
-                    milvus_results = await milvus_repo.vector_search(
-                        query_vector=query_vec,
-                        user_id=user_id,
-                        group_id=group_id,
-                        limit=retrieval_limit,
-                    )
+                    milvus_kwargs["current_time"] = current_time
+                if participant_user_id and data_source in (
+                    "episode",
+                    "event_log",
+                    "semantic_memory",
+                ):
+                    milvus_kwargs["participant_user_id"] = participant_user_id
+
+                milvus_results = await milvus_repo.vector_search(**milvus_kwargs)
                 
-                # 处理 Milvus 检索结果（不再基于 user_id 是否为空进行二次过滤）
+                # 处理 Milvus 检索结果
+                # 根据 data_source 判断度量类型：
+                # - semantic_memory 和 episode 使用 COSINE，score 就是相似度（范围 -1 到 1）
+                # - event_log 使用 L2，score 是距离（范围 0 到 +∞），需要转换为相似度
                 for result in milvus_results:
-                    l2_distance = result.get('score', 0)
-                    cosine_sim = 1 - (l2_distance ** 2 / 2)
-                    embedding_results.append((result, cosine_sim))
+                    score = result.get('score', 0)
+                    # 所有数据源统一使用 COSINE，相似度即 score
+                    similarity = score
+                    embedding_results.append((result, similarity))
                 
                 # 按相似度排序
                 embedding_results.sort(key=lambda x: x[1], reverse=True)
@@ -1268,12 +1294,19 @@ class MemoryManager:
                 # 调用 ES 检索
                 # 注意：为了确保能检索到足够的候选，增加 size
                 retrieval_size = max(top_k * 10, 100)  # 至少 100 条候选
-                hits = await es_repo.multi_search(
+                es_kwargs = dict(
                     query=query_words,
                     user_id=user_id,
                     group_id=group_id,
                     size=retrieval_size,
                 )
+                if participant_user_id and data_source in (
+                    "episode",
+                    "event_log",
+                    "semantic_memory",
+                ):
+                    es_kwargs["participant_user_id"] = participant_user_id
+                hits = await es_repo.multi_search(**es_kwargs)
                 
                 # 处理 ES 检索结果（不再基于 user_id 是否为空进行二次过滤）
                 for hit in hits:
@@ -1762,3 +1795,4 @@ class MemoryManager:
             fallback_result["metadata"]["fallback_reason"] = str(e)
             
             return fallback_result
+

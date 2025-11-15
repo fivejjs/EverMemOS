@@ -64,6 +64,7 @@ class RetrieveMemRequest:
     semantic_start_time: Optional[str] = None  # 语义记忆开始时间过滤
     semantic_end_time: Optional[str] = None  # 语义记忆结束时间过滤
     current_time: Optional[str] = None  # 当前时间，用于过滤有效期内的语义记忆
+    radius: Optional[float] = None  # COSINE 相似度阈值（None 时使用默认值 0.6）
 
 
 @dataclass

@@ -148,6 +148,8 @@ class EventLogMilvusRepository(BaseMilvusRepository[EventLogCollection]):
         end_time: Optional[datetime] = None,
         limit: int = 10,
         score_threshold: float = 0.0,
+        radius: Optional[float] = None,
+        participant_user_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """
         向量相似性搜索
@@ -162,6 +164,7 @@ class EventLogMilvusRepository(BaseMilvusRepository[EventLogCollection]):
             end_time: 事件时间戳结束过滤
             limit: 返回结果数量
             score_threshold: 相似度阈值
+            participant_user_id: 群组检索时额外要求参与者包含该用户
 
         Returns:
             搜索结果列表
@@ -171,11 +174,13 @@ class EventLogMilvusRepository(BaseMilvusRepository[EventLogCollection]):
             filter_expr = []
             if user_id is not None:  # 使用 is not None 而不是 truthy 检查，支持空字符串
                 if user_id:  # 非空字符串：个人记忆
-                    # 同时检查 user_id 字段和 participants 数组
-                    user_filter = f'(user_id == "{user_id}" or array_contains(participants, "{user_id}"))'
-                    filter_expr.append(user_filter)
+                    filter_expr.append(f'user_id == "{user_id}"')
                 else:  # 空字符串：群组记忆
                     filter_expr.append('user_id == ""')
+            if participant_user_id:
+                filter_expr.append(
+                    f'array_contains(participants, "{participant_user_id}")'
+                )
             if group_id:
                 filter_expr.append(f'group_id == "{group_id}"')
             if parent_episode_id:
@@ -189,10 +194,12 @@ class EventLogMilvusRepository(BaseMilvusRepository[EventLogCollection]):
 
             filter_str = " and ".join(filter_expr) if filter_expr else None
 
+            similarity_threshold: Optional[float] = radius if radius is not None else None
+
             # 执行搜索
             # 动态调整 ef 参数：必须 >= limit，通常设为 limit 的 1.5-2 倍
             ef_value = max(128, limit * 2)  # 确保 ef >= limit，至少 128
-            search_params = {"metric_type": "L2", "params": {"ef": ef_value}}
+            search_params = {"metric_type": "COSINE", "params": {"ef": ef_value}}
 
             results = await self.collection.search(
                 data=[query_vector],
@@ -207,7 +214,12 @@ class EventLogMilvusRepository(BaseMilvusRepository[EventLogCollection]):
             search_results = []
             for hits in results:
                 for hit in hits:
-                    if hit.score >= score_threshold:
+                    threshold = (
+                        similarity_threshold if similarity_threshold is not None else score_threshold
+                    )
+                    keep = hit.score >= threshold
+
+                    if keep:
                         # 解析元数据
                         metadata_json = hit.entity.get("metadata", "{}")
                         metadata = (
