@@ -77,7 +77,7 @@ class ChatOrchestrator:
     async def initialize_database(self, texts: I18nTexts) -> bool:
         """初始化数据库连接"""
         mongo_config = MongoDBConfig()
-        
+        print(mongo_config) 
         ui = CLIUI()
         ui.note(texts.get("mongodb_connecting"), icon="🔌")
         
@@ -174,7 +174,7 @@ class ChatOrchestrator:
             llm_config=llm_config,
             scenario_type=scenario_type,
             retrieval_mode=retrieval_mode,
-            data_source="memcell",  # 固定使用 memcell
+            data_source="episode",  # 固定使用 episode
             texts=texts,
         )
         

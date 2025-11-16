@@ -197,7 +197,7 @@ async def memcell_extraction_from_conversation(
             smart_mask_flag=smart_mask_flag,
             # group_id="group_1",
         )
-        for i in range(5):
+        for i in range(10):
             try:
                 result = await memcell_extractor.extract_memcell(
                     request,
@@ -206,7 +206,7 @@ async def memcell_extraction_from_conversation(
                 break
             except Exception as e:
                 print('retry: ', i)
-                if i == 4:
+                if i == 9:
                     raise Exception("Memcell extraction failed")
                 continue
         memcell_result = result[0]
@@ -596,9 +596,12 @@ async def main():
         max_tokens=config.llm_config[llm_service]["max_tokens"],
     )
 
-    # 创建共享的 Event Log Extractor
+    # 创建共享的 Event Log Extractor（使用评估专用提示词）
     console.print("⚙️ 初始化 Event Log Extractor...", style="yellow")
-    shared_event_log_extractor = EventLogExtractor(llm_provider=shared_llm_provider)
+    shared_event_log_extractor = EventLogExtractor(
+        llm_provider=shared_llm_provider,
+        use_eval_prompts=True  # 评估系统使用 eval/ 提示词
+    )
 
     # 🔥 使用待处理的对话字典（断点续传）
     # 创建进度计数器

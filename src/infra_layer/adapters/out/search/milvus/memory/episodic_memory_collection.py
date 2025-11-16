@@ -69,23 +69,7 @@ class EpisodicMemoryCollection(MilvusCollectionWithSuffix):
                 description="事件类型（如 conversation, email 等）",
             ),
             FieldSchema(
-                name="memory_sub_type",
-                dtype=DataType.VARCHAR,
-                max_length=50,
-                description="记忆子类型（episode/semantic_memory/event_log 等）",
-            ),
-            FieldSchema(
                 name="timestamp", dtype=DataType.INT64, description="事件时间戳"
-            ),
-            FieldSchema(
-                name="start_time",
-                dtype=DataType.INT64,
-                description="语义记忆开始时间（仅 semantic_memory 类型有效）",
-            ),
-            FieldSchema(
-                name="end_time",
-                dtype=DataType.INT64,
-                description="语义记忆结束时间（仅 semantic_memory 类型有效）",
             ),
             FieldSchema(
                 name="episode",
@@ -122,7 +106,7 @@ class EpisodicMemoryCollection(MilvusCollectionWithSuffix):
         IndexConfig(
             field_name="vector",
             index_type="HNSW",  # 高效的近似最近邻搜索
-            metric_type="L2",  # 欧氏距离
+            metric_type="COSINE",  # 余弦相似度
             params={
                 "M": 16,  # 每个节点的最大边数
                 "efConstruction": 200,  # 构建时的搜索宽度
@@ -133,8 +117,6 @@ class EpisodicMemoryCollection(MilvusCollectionWithSuffix):
             field_name="user_id", index_type="AUTOINDEX"  # 自动选择最适合的索引类型
         ),
         IndexConfig(field_name="group_id", index_type="AUTOINDEX"),
-        IndexConfig(field_name="memory_sub_type", index_type="AUTOINDEX"),  # 记忆子类型索引
+        IndexConfig(field_name="event_type", index_type="AUTOINDEX"),
         IndexConfig(field_name="timestamp", index_type="AUTOINDEX"),
-        IndexConfig(field_name="start_time", index_type="AUTOINDEX"),  # 语义记忆开始时间索引
-        IndexConfig(field_name="end_time", index_type="AUTOINDEX"),  # 语义记忆结束时间索引
     ]

@@ -15,7 +15,7 @@ class ExperimentConfig:
     
     # 🔥 新增：MemCell 提取功能开关
     enable_semantic_extraction: bool = False  # 是否启用语义记忆提取
-    enable_clustering: bool = True            # 是否启用聚类
+    enable_clustering: bool = False            # 是否启用聚类
     enable_profile_extraction: bool = False    # 是否启用 Profile 提取
     
     # 🔥 聚类配置
@@ -74,7 +74,7 @@ class ExperimentConfig:
             "base_url": "https://openrouter.ai/api/v1",
             "api_key": os.getenv("LLM_API_KEY"),
             "temperature": 0.3,
-            "max_tokens": 32768,
+            "max_tokens": 16384,
         },
         "vllm": {
             "llm_provider": "openai",
@@ -82,7 +82,7 @@ class ExperimentConfig:
             "base_url": "http://0.0.0.0:8000/v1",
             "api_key": "123",
             "temperature": 0,
-            "max_tokens": 32768,
+            "max_tokens": 16384,
         },
     }
     
