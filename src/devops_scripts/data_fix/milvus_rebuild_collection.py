@@ -15,13 +15,12 @@ Milvus 重建脚本（调用 core 通用工具）
 import argparse
 import sys
 import traceback
-from typing import Optional, List
+from typing import List, Optional
 
 from pymilvus import Collection
 
 from core.observation.logger import get_logger
 from core.oxm.milvus.migration.utils import rebuild_collection
-
 
 logger = get_logger(__name__)
 

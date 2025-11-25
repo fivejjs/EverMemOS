@@ -8,19 +8,19 @@
 
 import asyncio
 import inspect
-import os
 import json
+import os
 import traceback
 from typing import Any, Dict, List, Optional, Type
-from pydantic import BaseModel, Field
-from fastapi import HTTPException
 
-from core.interface.controller.base_controller import BaseController, post, get
-from core.di import get_container, get_bean, get_bean_by_type
-from core.di.decorators import controller
-from core.observation.logger import get_logger
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
 
 from core.constants.errors import ErrorMessage
+from core.di import get_bean, get_bean_by_type, get_container
+from core.di.decorators import controller
+from core.interface.controller.base_controller import BaseController, get, post
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -147,7 +147,7 @@ class DebugController(BaseController):
 
     def _check_debug_enabled(self) -> bool:
         """检查调试功能是否启用"""
-        return os.environ.get('ENV', 'prod').upper() == 'DEV'
+        return os.environ.get("ENV", "prod").upper() == "DEV"
 
     def _ensure_debug_enabled(self):
         """确保调试功能已启用，否则抛出404错误"""
@@ -161,7 +161,7 @@ class DebugController(BaseController):
         """获取Bean实例的可调用方法列表"""
         methods = []
         for attr_name in dir(bean_instance):
-            if not attr_name.startswith('_'):  # 排除私有方法
+            if not attr_name.startswith("_"):  # 排除私有方法
                 attr = getattr(bean_instance, attr_name)
                 if callable(attr):
                     methods.append(attr_name)
@@ -216,7 +216,7 @@ class DebugController(BaseController):
 
                 bean_instance = get_bean_by_type(bean_class)
                 bean_info = {
-                    "name": getattr(bean_instance, '_di_name', bean_type.lower()),
+                    "name": getattr(bean_instance, "_di_name", bean_type.lower()),
                     "type_name": bean_type,
                     "lookup_method": "by_type",
                 }
@@ -270,10 +270,10 @@ class DebugController(BaseController):
                 all_beans = self.container.list_all_beans_info()
 
                 for bean_info in all_beans:
-                    if bean_info['type_name'] == type_name:
+                    if bean_info["type_name"] == type_name:
                         # 通过名称获取Bean实例，然后获取其类型
                         try:
-                            bean_instance = get_bean(bean_info['name'])
+                            bean_instance = get_bean(bean_info["name"])
                             return type(bean_instance)
                         except Exception:
                             continue
@@ -318,57 +318,57 @@ class DebugController(BaseController):
         try:
             # 创建安全的执行环境，允许自由导入
             safe_globals = {
-                '__builtins__': {
+                "__builtins__": {
                     # 基础类型和函数
-                    'len': len,
-                    'str': str,
-                    'int': int,
-                    'float': float,
-                    'bool': bool,
-                    'list': list,
-                    'dict': dict,
-                    'tuple': tuple,
-                    'set': set,
-                    'range': range,
-                    'enumerate': enumerate,
-                    'zip': zip,
-                    'print': print,
-                    'isinstance': isinstance,
-                    'hasattr': hasattr,
-                    'getattr': getattr,
-                    'setattr': setattr,
-                    'type': type,
-                    'abs': abs,
-                    'min': min,
-                    'max': max,
-                    'sum': sum,
-                    'sorted': sorted,
-                    'reversed': reversed,
-                    'any': any,
-                    'all': all,
-                    'map': map,
-                    'filter': filter,
+                    "len": len,
+                    "str": str,
+                    "int": int,
+                    "float": float,
+                    "bool": bool,
+                    "list": list,
+                    "dict": dict,
+                    "tuple": tuple,
+                    "set": set,
+                    "range": range,
+                    "enumerate": enumerate,
+                    "zip": zip,
+                    "print": print,
+                    "isinstance": isinstance,
+                    "hasattr": hasattr,
+                    "getattr": getattr,
+                    "setattr": setattr,
+                    "type": type,
+                    "abs": abs,
+                    "min": min,
+                    "max": max,
+                    "sum": sum,
+                    "sorted": sorted,
+                    "reversed": reversed,
+                    "any": any,
+                    "all": all,
+                    "map": map,
+                    "filter": filter,
                     # 允许导入
-                    '__import__': __import__,
+                    "__import__": __import__,
                 },
                 # 预导入常用模块和类型
-                'datetime': None,
-                'json': None,
-                'uuid': None,
-                'typing': None,
+                "datetime": None,
+                "json": None,
+                "uuid": None,
+                "typing": None,
             }
 
             # 预导入常用模块
             try:
                 import datetime
                 import json
-                import uuid
                 import typing
+                import uuid
 
-                safe_globals['datetime'] = datetime
-                safe_globals['json'] = json
-                safe_globals['uuid'] = uuid
-                safe_globals['typing'] = typing
+                safe_globals["datetime"] = datetime
+                safe_globals["json"] = json
+                safe_globals["uuid"] = uuid
+                safe_globals["typing"] = typing
             except ImportError as e:
                 logger.warning(f"预导入模块失败: {e}")
 
@@ -380,12 +380,12 @@ class DebugController(BaseController):
             exec(code, safe_globals, local_vars)
 
             # 检查是否定义了args和kwargs
-            if 'args' not in local_vars and 'kwargs' not in local_vars:
+            if "args" not in local_vars and "kwargs" not in local_vars:
                 logger.error("代码执行结果无效：未定义args或kwargs变量")
                 raise ValueError(ErrorMessage.INVALID_PARAMETER.value)
 
-            args = local_vars.get('args', [])
-            kwargs = local_vars.get('kwargs', {})
+            args = local_vars.get("args", [])
+            kwargs = local_vars.get("kwargs", {})
 
             # 验证类型
             if not isinstance(args, (list, tuple)):
@@ -400,7 +400,7 @@ class DebugController(BaseController):
                 )
                 raise ValueError(ErrorMessage.INVALID_PARAMETER.value)
 
-            return {'args': list(args), 'kwargs': kwargs}
+            return {"args": list(args), "kwargs": kwargs}
 
         except Exception as e:
             logger.error(f"执行参数生成代码失败: {e}")
@@ -520,31 +520,31 @@ class DebugController(BaseController):
             for bean_info in all_beans:
                 try:
                     # 获取Bean实例以便获取方法列表
-                    bean_instance = get_bean(bean_info['name'])
+                    bean_instance = get_bean(bean_info["name"])
                     methods = self._get_bean_methods(bean_instance)
 
                     beans_info.append(
                         BeanInfoResponse(
-                            name=bean_info['name'],
-                            type_name=bean_info['type_name'],
-                            scope=bean_info['scope'],
-                            is_primary=bean_info['is_primary'],
-                            is_mock=bean_info['is_mock'],
+                            name=bean_info["name"],
+                            type_name=bean_info["type_name"],
+                            scope=bean_info["scope"],
+                            is_primary=bean_info["is_primary"],
+                            is_mock=bean_info["is_mock"],
                             methods=methods,
                         )
                     )
                 except Exception as e:
                     logger.warning(
-                        "获取Bean '%s' 的方法列表失败: %s", bean_info['name'], str(e)
+                        "获取Bean '%s' 的方法列表失败: %s", bean_info["name"], str(e)
                     )
                     # 即使获取方法列表失败，也返回基本信息
                     beans_info.append(
                         BeanInfoResponse(
-                            name=bean_info['name'],
-                            type_name=bean_info['type_name'],
-                            scope=bean_info['scope'],
-                            is_primary=bean_info['is_primary'],
-                            is_mock=bean_info['is_mock'],
+                            name=bean_info["name"],
+                            type_name=bean_info["type_name"],
+                            scope=bean_info["scope"],
+                            is_primary=bean_info["is_primary"],
+                            is_mock=bean_info["is_mock"],
                             methods=[],
                         )
                     )
@@ -675,11 +675,11 @@ class DebugController(BaseController):
                 # 使用代码执行方式
                 logger.info("使用代码执行方式生成参数")
                 code_result = self._execute_parameter_code(request.code)
-                args = code_result['args']
-                kwargs = code_result['kwargs']
+                args = code_result["args"]
+                kwargs = code_result["kwargs"]
                 code_execution_info = {
-                    'generated_args': args,
-                    'generated_kwargs': kwargs,
+                    "generated_args": args,
+                    "generated_kwargs": kwargs,
                 }
             else:
                 # 使用传统方式
@@ -716,7 +716,7 @@ class DebugController(BaseController):
             # 调用方法
             logger.info(
                 "调用Bean方法: %s.%s(args=%s, kwargs=%s)",
-                bean_info['name'],
+                bean_info["name"],
                 request.method,
                 args,
                 kwargs,
@@ -735,14 +735,14 @@ class DebugController(BaseController):
 
             # 构造响应
             response_data = {
-                'success': True,
-                'bean_info': bean_info,
+                "success": True,
+                "bean_info": bean_info,
                 **serialized_result,
             }
 
             # 如果使用了代码执行，添加执行信息
             if code_execution_info:
-                response_data['code_execution'] = code_execution_info
+                response_data["code_execution"] = code_execution_info
 
             return BeanCallResponse(**response_data)
 
@@ -761,8 +761,8 @@ class DebugController(BaseController):
                 success=False,
                 error=error_msg,
                 traceback=error_traceback,
-                bean_info=getattr(locals(), 'bean_info', None),
-                code_execution=getattr(locals(), 'code_execution_info', None),
+                bean_info=getattr(locals(), "bean_info", None),
+                code_execution=getattr(locals(), "code_execution_info", None),
             )
 
     @get(
@@ -839,7 +839,7 @@ class DebugController(BaseController):
 
             # 从容器获取Bean的元信息
             all_beans = self.container.list_all_beans_info()
-            bean_meta = next((b for b in all_beans if b['name'] == bean_name), None)
+            bean_meta = next((b for b in all_beans if b["name"] == bean_name), None)
 
             if not bean_meta:
                 raise HTTPException(
@@ -847,11 +847,11 @@ class DebugController(BaseController):
                 )
 
             return BeanInfoResponse(
-                name=bean_meta['name'],
-                type_name=bean_meta['type_name'],
-                scope=bean_meta['scope'],
-                is_primary=bean_meta['is_primary'],
-                is_mock=bean_meta['is_mock'],
+                name=bean_meta["name"],
+                type_name=bean_meta["type_name"],
+                scope=bean_meta["scope"],
+                is_primary=bean_meta["is_primary"],
+                is_mock=bean_meta["is_mock"],
                 methods=methods,
             )
 
@@ -974,8 +974,8 @@ class DebugController(BaseController):
             )
 
             code_result = self._execute_parameter_code(request.code)
-            args = code_result['args']
-            kwargs = code_result['kwargs']
+            args = code_result["args"]
+            kwargs = code_result["kwargs"]
 
             logger.info("代码执行成功，生成参数: args=%s, kwargs=%s", args, kwargs)
 
@@ -1001,7 +1001,7 @@ class DebugController(BaseController):
             # 调用方法
             logger.info(
                 "调用Bean方法: %s.%s(args=%s, kwargs=%s)",
-                bean_info['name'],
+                bean_info["name"],
                 request.method,
                 args,
                 kwargs,
@@ -1020,9 +1020,9 @@ class DebugController(BaseController):
 
             # 添加代码执行信息
             response_data = {
-                'success': True,
-                'bean_info': bean_info,
-                'code_execution': {'generated_args': args, 'generated_kwargs': kwargs},
+                "success": True,
+                "bean_info": bean_info,
+                "code_execution": {"generated_args": args, "generated_kwargs": kwargs},
                 **serialized_result,
             }
 
@@ -1043,6 +1043,6 @@ class DebugController(BaseController):
                 success=False,
                 error=error_msg,
                 traceback=error_traceback,
-                bean_info=getattr(locals(), 'bean_info', None),
-                code_execution=getattr(locals(), 'code_result', None),
+                bean_info=getattr(locals(), "bean_info", None),
+                code_execution=getattr(locals(), "code_result", None),
             )

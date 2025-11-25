@@ -5,16 +5,17 @@ This module provides a high-level interface for managing MongoDB database migrat
 using Beanie as the underlying migration engine.
 """
 
-import os
 import logging
+import os
 import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from common_utils.project_path import CURRENT_DIR
 from pymongo import MongoClient
+
+from common_utils.project_path import CURRENT_DIR
 
 # Module-level logger for this file
 logger = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ class Backward:
         # 追加 URI 参数（如果有）
         uri_params = os.getenv("MONGODB_URI_PARAMS", "").strip()
         if uri_params:
-            separator = '&' if ('?' in base_uri) else '?'
+            separator = "&" if ("?" in base_uri) else "?"
             return f"{base_uri}{separator}{uri_params}"
         return base_uri
 
@@ -177,7 +178,7 @@ class Backward:
         )
 
         # Write file
-        filepath.write_text(content, encoding='utf-8')
+        filepath.write_text(content, encoding="utf-8")
         logger.info(f"✅ 创建迁移文件: {filepath}")
 
         return filepath

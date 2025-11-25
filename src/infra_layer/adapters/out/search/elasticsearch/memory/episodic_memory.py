@@ -1,12 +1,13 @@
 # 导入保留用于类型注解和字段定义
 from elasticsearch.dsl import field as e_field
-from core.oxm.es.doc_base import AliasDoc
+
 from core.oxm.es.analyzer import (
     completion_analyzer,
-    lower_keyword_analyzer,
     edge_analyzer,
+    lower_keyword_analyzer,
     whitespace_lowercase_trim_stop_analyzer,
 )
+from core.oxm.es.doc_base import AliasDoc
 
 
 class EpisodicMemoryDoc(AliasDoc("episodic-memory", number_of_shards=3)):

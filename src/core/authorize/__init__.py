@@ -5,37 +5,37 @@
 以及自定义授权策略。
 """
 
-from .enums import Role
-from .interfaces import AuthorizationStrategy, AuthorizationContext
-from .strategies import (
-    DefaultAuthorizationStrategy,
-    RoleBasedAuthorizationStrategy,
-    CustomAuthorizationStrategy,
-)
 from .decorators import (
     authorize,
+    check_and_apply_default_auth,
+    custom_authorize,
+    require_admin,
     require_anonymous,
     require_user,
-    require_admin,
-    custom_authorize,
-    check_and_apply_default_auth,
+)
+from .enums import Role
+from .interfaces import AuthorizationContext, AuthorizationStrategy
+from .strategies import (
+    CustomAuthorizationStrategy,
+    DefaultAuthorizationStrategy,
+    RoleBasedAuthorizationStrategy,
 )
 
 __all__ = [
     # 枚举
-    'Role',
+    "Role",
     # 接口
-    'AuthorizationStrategy',
-    'AuthorizationContext',
+    "AuthorizationStrategy",
+    "AuthorizationContext",
     # 策略实现
-    'DefaultAuthorizationStrategy',
-    'RoleBasedAuthorizationStrategy',
-    'CustomAuthorizationStrategy',
+    "DefaultAuthorizationStrategy",
+    "RoleBasedAuthorizationStrategy",
+    "CustomAuthorizationStrategy",
     # 装饰器
-    'authorize',
-    'require_anonymous',
-    'require_user',
-    'require_admin',
-    'custom_authorize',
-    'check_and_apply_default_auth',
+    "authorize",
+    "require_anonymous",
+    "require_user",
+    "require_admin",
+    "custom_authorize",
+    "check_and_apply_default_auth",
 ]

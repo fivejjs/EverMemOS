@@ -5,10 +5,11 @@
 """
 
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
+
+from core.di.decorators import component
 from core.interface.controller.base_controller import BaseController, get
 from core.observation.logger import get_logger
-from core.di.decorators import component
 
 logger = get_logger(__name__)
 
@@ -23,7 +24,9 @@ class HealthController(BaseController):
 
     def __init__(self):
         super().__init__(
-            prefix="/api", tags=["Health"], default_auth="none"  # 健康检查不需要认证
+            prefix="/api",
+            tags=["Health"],
+            default_auth="none",  # 健康检查不需要认证
         )
 
     @get("/health", summary="健康检查", description="检查系统健康状态")

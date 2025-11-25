@@ -9,7 +9,11 @@ from core.observation.logger import get_logger
 from ...llm.llm_provider import LLMProvider
 from .conversation import build_evidence_completion_prompt
 from .data_normalize import merge_evidences_recursive
-from .evidence_utils import conversation_id_from_evidence, ensure_str_list, format_evidence_entry
+from .evidence_utils import (
+    conversation_id_from_evidence,
+    ensure_str_list,
+    format_evidence_entry,
+)
 
 logger = get_logger(__name__)
 
@@ -44,7 +48,9 @@ def _project_nested_item_has_missing_evidence(item: Any) -> bool:
             return False
         if "value" in item:
             return _has_non_empty_value(item.get("value"))
-        return any(_project_nested_item_has_missing_evidence(val) for val in item.values())
+        return any(
+            _project_nested_item_has_missing_evidence(val) for val in item.values()
+        )
     if isinstance(item, list):
         return any(_project_nested_item_has_missing_evidence(val) for val in item)
     if isinstance(item, str):
@@ -120,7 +126,9 @@ async def complete_missing_evidences(
                 "不要有任何多余的解释和说明\n 原始字符串为:\n" + (response_text or "")
             )
             try:
-                response_text = await llm_provider.generate(repair_prompt, temperature=0)
+                response_text = await llm_provider.generate(
+                    repair_prompt, temperature=0
+                )
                 parsed_payload = parse_payload(response_text)
                 break
             except Exception as repair_exc:  # pylint: disable=broad-except
@@ -230,11 +238,7 @@ def _extract_missing_evidences_payload(
         if pruned:
             payload[field] = pruned
 
-    extra_keys = [
-        key
-        for key in payload.keys()
-        if key not in {"user_id", "user_name"}
-    ]
+    extra_keys = [key for key in payload.keys() if key not in {"user_id", "user_name"}]
     return payload if extra_keys else None
 
 
@@ -248,7 +252,9 @@ def _remove_invalid_evidences(
     if not profile or valid_conversation_ids is None:
         return
 
-    user_id = str(profile.get("user_id", "")).strip() if isinstance(profile, dict) else ""
+    user_id = (
+        str(profile.get("user_id", "")).strip() if isinstance(profile, dict) else ""
+    )
 
     def sanitize(node: Any) -> None:
         if isinstance(node, dict):
@@ -269,7 +275,9 @@ def _remove_invalid_evidences(
                                 user_id or "<unknown>",
                             )
                         elif conversation_participants_map is not None:
-                            participants = conversation_participants_map.get(conversation_id)
+                            participants = conversation_participants_map.get(
+                                conversation_id
+                            )
                             if participants is None:
                                 should_remove = True
                                 logger.debug(
@@ -315,7 +323,9 @@ def _format_evidences_with_dates(
                     for evidence in evidences_list:
                         if not evidence:
                             continue
-                        conversation_id = conversation_id_from_evidence(evidence) or evidence
+                        conversation_id = (
+                            conversation_id_from_evidence(evidence) or evidence
+                        )
                         formatted_entry = format_evidence_entry(
                             conversation_id,
                             conversation_date_map=conversation_date_map,
@@ -365,9 +375,8 @@ def _prune_missing_evidences(
         if not result_dict:
             return None
 
-        if (
-            root_field == "projects_participated"
-            and any(key in value for key in PROJECTS_PARTICIPATED_NESTED_FIELDS)
+        if root_field == "projects_participated" and any(
+            key in value for key in PROJECTS_PARTICIPATED_NESTED_FIELDS
         ):
             has_pending_nested = any(
                 _project_nested_item_has_missing_evidence(result_dict.get(sub_key))

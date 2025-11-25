@@ -5,22 +5,22 @@ This module extracts atomic event logs from episode memories for optimized retri
 Each event log contains a time and a list of atomic facts extracted from the episode.
 """
 
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import json
 import re
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from common_utils.datetime_utils import get_now_with_timezone
+from core.observation.logger import get_logger
+
+from ..llm.llm_provider import LLMProvider
 
 # 使用动态语言提示词导入（根据 MEMORY_LANGUAGE 环境变量自动选择）
 from ..prompts import EVENT_LOG_PROMPT
 
 # 评估专用提示词
 from ..prompts.eval.event_log_prompts import EVENT_LOG_PROMPT as EVAL_EVENT_LOG_PROMPT
-
-from ..llm.llm_provider import LLMProvider
-from common_utils.datetime_utils import get_now_with_timezone
-
-from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -46,9 +46,9 @@ class EventLog:
     def from_dict(cls, data: Dict[str, Any]) -> "EventLog":
         """Create EventLog from dictionary."""
         return cls(
-            time=data.get("time", ""), 
+            time=data.get("time", ""),
             atomic_fact=data.get("atomic_fact", []),
-            fact_embeddings=data.get("fact_embeddings")
+            fact_embeddings=data.get("fact_embeddings"),
         )
 
 
@@ -71,7 +71,7 @@ class EventLogExtractor:
         """
         self.llm_provider = llm_provider
         self.use_eval_prompts = use_eval_prompts
-        
+
         # 根据 use_eval_prompts 选择对应的提示词
         if self.use_eval_prompts:
             self.event_log_prompt = EVAL_EVENT_LOG_PROMPT
@@ -99,7 +99,7 @@ class EventLogExtractor:
                     return datetime.fromtimestamp(int(timestamp))
                 else:
                     # 尝试解析ISO格式
-                    return datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 logger.error(f"解析时间戳失败: {timestamp}")
                 return get_now_with_timezone()
@@ -138,9 +138,9 @@ class EventLogExtractor:
             ValueError: 如果无法解析响应
         """
         # 1. 尝试提取代码块中的JSON
-        if '```json' in response:
-            start = response.find('```json') + 7
-            end = response.find('```', start)
+        if "```json" in response:
+            start = response.find("```json") + 7
+            end = response.find("```", start)
             if end > start:
                 json_str = response[start:end].strip()
                 try:
@@ -149,12 +149,12 @@ class EventLogExtractor:
                     pass
 
         # 2. 尝试提取任何代码块
-        if '```' in response:
-            start = response.find('```') + 3
+        if "```" in response:
+            start = response.find("```") + 3
             # 跳过语言标识符（如果有）
             if response[start : start + 10].strip().split()[0].isalpha():
-                start = response.find('\n', start) + 1
-            end = response.find('```', start)
+                start = response.find("\n", start) + 1
+            end = response.find("```", start)
             if end > start:
                 json_str = response[start:end].strip()
                 try:
@@ -234,16 +234,19 @@ class EventLogExtractor:
             event_log = EventLog(
                 time=event_log_data["time"], atomic_fact=event_log_data["atomic_fact"]
             )
-            
+
             # 7. 为每个 atomic_fact 生成 embedding
             from agentic_layer.vectorize_service import get_vectorize_service
+
             vectorize_service = get_vectorize_service()
-            
+
             fact_embeddings = []
             for fact in event_log.atomic_fact:
                 fact_emb = await vectorize_service.get_embedding(fact)
-                fact_embeddings.append(fact_emb.tolist() if hasattr(fact_emb, 'tolist') else fact_emb)
-            
+                fact_embeddings.append(
+                    fact_emb.tolist() if hasattr(fact_emb, "tolist") else fact_emb
+                )
+
             event_log.fact_embeddings = fact_embeddings
 
             logger.debug(

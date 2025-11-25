@@ -5,18 +5,19 @@ Memsys Backend 管理脚本
 """
 
 import asyncio
-from IPython.terminal.embed import embed
 from functools import wraps
 from typing import Callable
+
 import nest_asyncio
+from IPython.terminal.embed import embed
 
 nest_asyncio.apply()
 
 import typer
-from typer import Typer
 
 # 添加src目录到Python路径
 from import_parent_dir import add_parent_path
+from typer import Typer
 
 add_parent_path(0)
 
@@ -39,8 +40,8 @@ def setup_environment_and_app(env_file: str = ".env"):
     if _initialized:
         return
 
-    from common_utils.load_env import setup_environment
     from application_startup import setup_all
+    from common_utils.load_env import setup_environment
 
     # 加载环境变量
     setup_environment(load_env_file_name=env_file, check_env_var="GEMINI_API_KEY")
@@ -97,8 +98,8 @@ def with_full_context_decorator(func: Callable) -> Callable:
         global _app_state
 
         from app import app
-        from core.di.utils import get_bean_by_type
         from core.context.context_manager import ContextManager
+        from core.di.utils import get_bean_by_type
 
         # 创建应用上下文
         async with app.router.lifespan_context(app):
@@ -145,9 +146,9 @@ def shell(
     setup_environment_and_app(env_file)
 
     from app import app
-    from core.observation.logger import get_logger
-    from core.di.utils import get_bean_by_type
     from core.context.context_manager import ContextManager
+    from core.di.utils import get_bean_by_type
+    from core.observation.logger import get_logger
 
     logger = get_logger(__name__)
 
@@ -199,11 +200,11 @@ def list_commands(
     typer.echo("可用的命令:")
     for cmd in commands:
         help_text = cmd.help if cmd.help else "无描述"
-        typer.echo(f"  {cmd.name:<20} {help_text}"),
+        (typer.echo(f"  {cmd.name:<20} {help_text}"),)
 
     typer.echo(f"\n使用环境文件: {env_file}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # 运行CLI
     cli()

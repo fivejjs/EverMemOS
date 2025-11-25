@@ -1,10 +1,10 @@
 """Topic management utilities for group profile extraction."""
 
-from typing import List, Dict, Set, Optional
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Dict, List, Optional, Set
 
-from common_utils.datetime_utils import get_now_with_timezone, from_iso_format
+from common_utils.datetime_utils import from_iso_format, get_now_with_timezone
 from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
@@ -85,12 +85,12 @@ class TopicProcessor:
         for memcell in memcell_list:
             # If filter_ids provided, only consider memcells in the filter
             # 转换为字符串以匹配 filter_ids 中的格式
-            if filter_ids and hasattr(memcell, 'event_id'):
+            if filter_ids and hasattr(memcell, "event_id"):
                 memcell_id_str = str(memcell.event_id)
                 if memcell_id_str not in filter_ids:
                     continue
 
-            if hasattr(memcell, 'timestamp') and memcell.timestamp:
+            if hasattr(memcell, "timestamp") and memcell.timestamp:
                 matched_count += 1
                 memcell_time = convert_to_datetime(memcell.timestamp)
                 if latest_time is None or memcell_time > latest_time:

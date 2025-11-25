@@ -5,23 +5,29 @@ ConversationMeta Beanie ODM 模型
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from beanie import Indexed
-from core.oxm.mongo.document_base import DocumentBase
-from pydantic import Field, ConfigDict, BaseModel
-from pymongo import IndexModel, ASCENDING, DESCENDING, TEXT
+from pydantic import BaseModel, ConfigDict, Field
+from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
+
 from core.oxm.mongo.audit_base import AuditBase
+from core.oxm.mongo.document_base import DocumentBase
 
 
 class UserDetailModel(BaseModel):
     """用户详情嵌套模型
-    
+
     用于存储用户的基本信息和额外扩展信息
     """
 
     full_name: str = Field(..., description="用户全名")
-    role: Optional[str] = Field(default=None, description="用户角色，如：用户、助手、管理员等")
-    extra: Optional[Dict[str, Any]] = Field(default=None, description="扩展字段，支持动态schema")
+    role: Optional[str] = Field(
+        default=None, description="用户角色，如：用户、助手、管理员等"
+    )
+    extra: Optional[Dict[str, Any]] = Field(
+        default=None, description="扩展字段，支持动态schema"
+    )
 
 
 class ConversationMeta(DocumentBase, AuditBase):
@@ -59,7 +65,9 @@ class ConversationMeta(DocumentBase, AuditBase):
     )
 
     # 标签和分类
-    tags: List[str] = Field(default_factory=list, description="标签列表，用于分类和检索")
+    tags: List[str] = Field(
+        default_factory=list, description="标签列表，用于分类和检索"
+    )
 
     model_config = ConfigDict(
         # 集合名称
@@ -120,4 +128,3 @@ class ConversationMeta(DocumentBase, AuditBase):
         ]
         validate_on_save = True
         use_state_management = True
-

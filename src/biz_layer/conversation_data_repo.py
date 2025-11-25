@@ -5,9 +5,9 @@ Mock Repository实现
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
-from memory_layer.memcell_extractor.base_memcell_extractor import RawData
+from typing import Any, Dict, List, Optional
 
+from memory_layer.memcell_extractor.base_memcell_extractor import RawData
 
 # ==================== 接口定义 ====================
 

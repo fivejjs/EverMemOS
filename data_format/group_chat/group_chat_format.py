@@ -5,7 +5,7 @@
 格式设计考虑了可扩展性、易读性和数据完整性。
 """
 
-from typing import TypedDict, List, Optional, Literal, Dict, Any
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 
 # 用户详细信息
@@ -247,7 +247,7 @@ def create_example_group_chat() -> GroupChatFormat:
                 "sender": "user_103",
                 "sender_name": "Chen",
                 "type": "text",
-                "content": "大家早，\"智能销售助手\"现在进展如何？",
+                "content": '大家早，"智能销售助手"现在进展如何？',
                 "refer_list": [],
             },
             {

@@ -6,17 +6,18 @@ MemCell 原生 CRUD 仓库
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from bson import ObjectId
-from beanie.operators import And, GTE, LT, Eq, RegEx, Or
-from motor.motor_asyncio import AsyncIOMotorClientSession
-from core.observation.logger import get_logger
-from core.di.decorators import repository
-from core.oxm.mongo.base_repository import BaseRepository
+from typing import Any, Dict, List, Optional
 
+from beanie.operators import GTE, LT, And, Eq, Or, RegEx
+from bson import ObjectId
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
+from core.di.decorators import repository
+from core.observation.logger import get_logger
+from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.memcell import (
-    MemCell,
     DataTypeEnum,
+    MemCell,
 )
 
 logger = get_logger(__name__)
@@ -186,7 +187,7 @@ class MemCellRawRepository(BaseRepository[MemCell]):
     ) -> List[MemCell]:
         """
         根据用户 ID 和时间范围查询 MemCell
-        
+
         同时检查 user_id 字段和 participants 数组，只要 user_id 在其中之一即可
 
         Args:
@@ -206,8 +207,10 @@ class MemCellRawRepository(BaseRepository[MemCell]):
             query = self.model.find(
                 And(
                     Or(
-                    Eq(MemCell.user_id, user_id),
-                        Eq(MemCell.participants, user_id)  # MongoDB 会检查数组中是否包含该值
+                        Eq(MemCell.user_id, user_id),
+                        Eq(
+                            MemCell.participants, user_id
+                        ),  # MongoDB 会检查数组中是否包含该值
                     ),
                     GTE(MemCell.timestamp, start_time),
                     LT(MemCell.timestamp, end_time),
@@ -364,7 +367,7 @@ class MemCellRawRepository(BaseRepository[MemCell]):
             logger.debug(
                 "✅ 根据参与者查询 MemCell 成功: %s, 匹配模式: %s, 找到 %d 条记录",
                 participants,
-                '全部' if match_all else '任一',
+                "全部" if match_all else "任一",
                 len(results),
             )
             return results
@@ -408,7 +411,7 @@ class MemCellRawRepository(BaseRepository[MemCell]):
             logger.debug(
                 "✅ 根据关键词查询 MemCell 成功: %s, 匹配模式: %s, 找到 %d 条记录",
                 keywords,
-                '全部' if match_all else '任一',
+                "全部" if match_all else "任一",
                 len(results),
             )
             return results
@@ -476,7 +479,7 @@ class MemCellRawRepository(BaseRepository[MemCell]):
                 "✅ 删除时间范围内 MemCell 成功: %s - %s, 用户: %s, 删除 %d 条记录",
                 start_time,
                 end_time,
-                user_id or '全部',
+                user_id or "全部",
                 count,
             )
             return count
@@ -534,7 +537,7 @@ class MemCellRawRepository(BaseRepository[MemCell]):
                 "✅ 统计时间范围内 MemCell 数量成功: %s - %s, 用户: %s, 共 %d 条记录",
                 start_time,
                 end_time,
-                user_id or '全部',
+                user_id or "全部",
                 count,
             )
             return count

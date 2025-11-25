@@ -1,13 +1,15 @@
-from typing import Dict, Any, List, Union, AsyncGenerator
 import os
+from typing import Any, AsyncGenerator, Dict, List, Union
+
 import openai
-from core.di.decorators import service
-from component.llm_adapter.llm.llm_backend_adapter import LLMBackendAdapter
+
 from component.llm_adapter.llm.completion import (
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
+from component.llm_adapter.llm.llm_backend_adapter import LLMBackendAdapter
 from core.constants.errors import ErrorMessage
+from core.di.decorators import service
 
 
 class OpenAIAdapter(LLMBackendAdapter):

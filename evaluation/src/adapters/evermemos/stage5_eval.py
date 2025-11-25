@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-
 import time
 from pathlib import Path
 
@@ -9,7 +8,6 @@ import numpy as np
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from tqdm import tqdm
-
 
 from evaluation.src.adapters.evermemos.config import ExperimentConfig
 
@@ -71,7 +69,6 @@ async def locomo_grader(
     return parsed.llm_judgment.strip().lower() == "correct"
 
 
-
 def convert_numpy_types(obj):
     if isinstance(obj, np.number):
         return float(obj)
@@ -91,10 +88,10 @@ async def process_group_responses(
     # 🔥 只在非禁用模式下显示进度条
     # Process responses with asyncio for concurrent API calls
     for response in tqdm(
-        group_responses, 
-        desc=f"Processing {group_id}", 
+        group_responses,
+        desc=f"Processing {group_id}",
         disable=disable_progress,
-        leave=False  # 完成后清除进度条
+        leave=False,  # 完成后清除进度条
     ):
         question = response.get("question")
         answer = response.get("answer")
@@ -158,9 +155,9 @@ async def main():
     max_workers = 10
 
     # 🔥 简化输出
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"🔍 Stage5: LLM-as-a-Judge Evaluation")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # --- Path Setup ---
     current_dir = Path(__file__).parent
@@ -196,7 +193,7 @@ async def main():
     print(f"👥 Total users: {num_users}")
     print(f"🔄 Judgments per question: {num_runs}")
     print(f"⚡ Concurrent workers: {max_workers}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # Create tasks for processing each group
     tasks = []
@@ -211,7 +208,11 @@ async def main():
         active_users += 1
         tasks.append(
             process_single_group(
-                group_id, group_responses, oai_client, num_runs, disable_progress=True  # 🔥 禁用单组进度条
+                group_id,
+                group_responses,
+                oai_client,
+                num_runs,
+                disable_progress=True,  # 🔥 禁用单组进度条
             )
         )
 
@@ -224,14 +225,14 @@ async def main():
             return await task
 
     limited_tasks = [limited_task(task) for task in tasks]
-    
+
     # 🔥 添加总体进度条
     group_results = []
     for coro in tqdm(
         asyncio.as_completed(limited_tasks),
         total=len(limited_tasks),
         desc="📈 Evaluating groups",
-        unit="group"
+        unit="group",
     ):
         result = await coro
         group_results.append(result)
@@ -239,9 +240,9 @@ async def main():
     for group_id, graded_responses in group_results:
         all_grades[group_id] = graded_responses
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"✅ Evaluation Complete")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # --- Score Calculation ---
     run_scores = []
@@ -269,17 +270,17 @@ async def main():
     if evaluated_count > 0:
         mean_of_scores = np.mean(run_scores)
         std_of_scores = np.std(run_scores)
-        
-        print(f"\n{'='*60}")
+
+        print(f"\n{'=' * 60}")
         print(f"📊 Final Results")
-        print(f"{'='*60}")
-        print(f"🎯 Mean Accuracy:  {mean_of_scores:.4f} ({mean_of_scores*100:.2f}%)")
+        print(f"{'=' * 60}")
+        print(f"🎯 Mean Accuracy:  {mean_of_scores:.4f} ({mean_of_scores * 100:.2f}%)")
         print(f"📈 Std Deviation:  {std_of_scores:.4f}")
         print(f"📝 Questions:      {evaluated_count}")
         print(f"🔄 Runs per Q:     {num_runs}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Individual run scores: {[round(s, 4) for s in run_scores]}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
     else:
         print("\n⚠️  No responses were evaluated")
         print("LLM-as-a-Judge score: N/A (0/0)\n")

@@ -1,10 +1,11 @@
-import os
-import yaml
 import json
-from typing import Dict, Any, Optional
+import os
+from typing import Any, Dict, Optional
 
-from core.di.decorators import component
+import yaml
+
 from common_utils.project_path import CURRENT_DIR
+from core.di.decorators import component
 
 
 @component(name="config_provider")
@@ -39,8 +40,8 @@ class ConfigProvider:
             raise FileNotFoundError(f"配置文件不存在: {config_name}")
 
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
-                if config_file.suffix.lower() in ['.yaml', '.yml']:
+            with open(config_file, "r", encoding="utf-8") as f:
+                if config_file.suffix.lower() in [".yaml", ".yml"]:
                     config_data = yaml.safe_load(f)
                 else:
                     config_data = json.load(f)
@@ -74,7 +75,7 @@ class ConfigProvider:
 
         try:
             # 直接读取文本文件内容
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_file, "r", encoding="utf-8") as f:
                 raw_content = f.read()
 
             # 缓存原始文本内容

@@ -6,11 +6,13 @@ SemanticMemory Beanie ODM 模型
 
 from datetime import datetime
 from typing import List, Optional
+
 from beanie import Indexed
-from core.oxm.mongo.document_base import DocumentBase
-from pydantic import BaseModel, Field, ConfigDict
-from pymongo import IndexModel, ASCENDING, DESCENDING, TEXT
+from pydantic import BaseModel, ConfigDict, Field
+from pymongo import ASCENDING, DESCENDING, TEXT, IndexModel
+
 from core.oxm.mongo.audit_base import AuditBase
+from core.oxm.mongo.document_base import DocumentBase
 
 
 class SemanticMemory(DocumentBase, AuditBase):

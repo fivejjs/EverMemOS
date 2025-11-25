@@ -4,12 +4,13 @@ Milvus 客户端工厂
 基于环境变量提供 Milvus 客户端连接功能。
 """
 
-import os
 import asyncio
-from typing import Optional, Dict
+import os
 from hashlib import md5
+from typing import Dict, Optional
 
 from pymilvus import MilvusClient
+
 from core.di.decorators import component
 from core.observation.logger import get_logger
 

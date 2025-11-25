@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
 import ast
+import asyncio
 import json
 import re
 from datetime import datetime
@@ -12,13 +12,15 @@ from typing import AbstractSet, Any, Dict, List, Optional, Set
 from core.observation.logger import get_logger
 
 from ...llm.llm_provider import LLMProvider
+
 # 使用动态语言提示词导入（根据 MEMORY_LANGUAGE 环境变量自动选择）
 from ...prompts import (
     CONVERSATION_PROFILE_PART1_EXTRACTION_PROMPT,
     CONVERSATION_PROFILE_PART2_EXTRACTION_PROMPT,
     CONVERSATION_PROFILE_PART3_EXTRACTION_PROMPT,
 )
-from ...types import MemoryType, MemCell
+from ...types import MemCell, MemoryType
+from ..base_memory_extractor import MemoryExtractor, MemoryExtractRequest
 from .conversation import (
     annotate_relative_dates,
     build_conversation_text,
@@ -29,7 +31,6 @@ from .conversation import (
     is_important_to_user,
     merge_group_importance_evidence,
 )
-from .empty_evidence_completion import complete_missing_evidences
 from .data_normalize import (
     accumulate_old_memory_entry,
     convert_projects_to_dataclass,
@@ -38,11 +39,20 @@ from .data_normalize import (
     profile_payload_to_memory,
     remove_evidences_from_profile,
 )
-from .evidence_utils import filter_opinion_tendency_by_type, remove_entries_without_evidence           
-from .project_helpers import filter_project_items_by_type
+from .empty_evidence_completion import complete_missing_evidences
+from .evidence_utils import (
+    filter_opinion_tendency_by_type,
+    remove_entries_without_evidence,
+)
 from .merger import convert_important_info_to_evidence
-from .types import GroupImportanceEvidence, ImportanceEvidence, ProfileMemory, ProfileMemoryExtractRequest, ProjectInfo
-from ..base_memory_extractor import MemoryExtractor, MemoryExtractRequest
+from .project_helpers import filter_project_items_by_type
+from .types import (
+    GroupImportanceEvidence,
+    ImportanceEvidence,
+    ProfileMemory,
+    ProfileMemoryExtractRequest,
+    ProjectInfo,
+)
 
 logger = get_logger(__name__)
 
@@ -68,8 +78,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
 
         # Extract complete user_id to user_name mapping from all memcells and old memories
         user_id_to_name = extract_user_mapping_from_memcells(
-            request.memcell_list,
-            old_memory_list=request.old_memory_list
+            request.memcell_list, old_memory_list=request.old_memory_list
         )
 
         conversation_date_map = self.__class__._conversation_date_map
@@ -78,11 +87,13 @@ class ProfileMemoryExtractor(MemoryExtractor):
         valid_conversation_ids: Set[str] = set()
         conversation_participants_map: Dict[str, Optional[AbstractSet[str]]] = {}
         for memcell in request.memcell_list:
-            conversation_text, conversation_id = build_conversation_text(memcell, user_id_to_name)
+            conversation_text, conversation_id = build_conversation_text(
+                memcell, user_id_to_name
+            )
             all_conversation_text.append(conversation_text)
 
-            #episode_text, episode_id = build_episode_text(memcell, user_id_to_name)
-            #all_episode_text.append(episode_text)
+            # episode_text, episode_id = build_episode_text(memcell, user_id_to_name)
+            # all_episode_text.append(episode_text)
 
             timestamp_value = getattr(memcell, "timestamp", None)
             dt_value = self._parse_timestamp(timestamp_value)
@@ -140,14 +151,18 @@ class ProfileMemoryExtractor(MemoryExtractor):
                         profile_obj_no_evidences = remove_evidences_from_profile(
                             participants_profile_list[-1]
                         )
-                        participants_profile_list_no_evidences.append(profile_obj_no_evidences)
+                        participants_profile_list_no_evidences.append(
+                            profile_obj_no_evidences
+                        )
                 elif mem.memory_type == MemoryType.BASE_MEMORY:
                     base_memory_obj: Dict[str, Any] = {"user_id": mem.user_id}
 
                     if getattr(mem, "position", None):
                         base_memory_obj["position"] = getattr(mem, "position", None)
                     if getattr(mem, "base_location", None):
-                        base_memory_obj["base_location"] = getattr(mem, "base_location", None)
+                        base_memory_obj["base_location"] = getattr(
+                            mem, "base_location", None
+                        )
                     if getattr(mem, "department", None):
                         base_memory_obj["department"] = getattr(mem, "department", None)
 
@@ -181,16 +196,18 @@ class ProfileMemoryExtractor(MemoryExtractor):
 
             for attempt in range(extraction_attempts):
                 try:
-                    logger.info(f"Starting {attempt+1} time {part_label} profile extraction")
+                    logger.info(
+                        f"Starting {attempt + 1} time {part_label} profile extraction"
+                    )
                     response = await self.llm_provider.generate(prompt, temperature=0.3)
-                    #不能批量转换相对日期了，因为离线处理一次性不止一天的数据
-                    annotated_response = response 
+                    # 不能批量转换相对日期了，因为离线处理一次性不止一天的数据
+                    annotated_response = response
                     parsed_profiles = self._extract_user_profiles_from_response(
                         annotated_response,
                         part_label,
                     )
                     break
-                except Exception as exc:  
+                except Exception as exc:
                     logger.warning(
                         "%s profile extraction failed (attempt %s/%s): %s",
                         part_label,
@@ -213,19 +230,22 @@ class ProfileMemoryExtractor(MemoryExtractor):
 
                     repair_prompt = (
                         "输入的字符串是json格式，但有语法错误，请修复语法错误,输出时只给出格式正确的json格式```json {}```"
-                        "不要有任何多余的解释和说明\n 原始字符串为:\n" + (response or "")
+                        "不要有任何多余的解释和说明\n 原始字符串为:\n"
+                        + (response or "")
                     )
 
                     try:
                         logger.info(f"Starting to repair {part_label} profile response")
-                        response = await self.llm_provider.generate(repair_prompt, temperature=0)
-                        #不能批量转换相对日期了，因为离线处理一次性不止一天的数据
+                        response = await self.llm_provider.generate(
+                            repair_prompt, temperature=0
+                        )
+                        # 不能批量转换相对日期了，因为离线处理一次性不止一天的数据
                         annotated_response = response
                         parsed_profiles = self._extract_user_profiles_from_response(
                             annotated_response,
                             part_label,
                         )
-                    except Exception as repair_exc:  
+                    except Exception as repair_exc:
                         logger.error(
                             "%s repair prompt failed: %s",
                             part_label,
@@ -250,7 +270,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
         # task_part2 = asyncio.create_task(
         #     invoke_llm(prompt_part2, "project profile part"),
         # )
-        
+
         # profiles_part1, profiles_part2 = await asyncio.gather(task_part1, task_part2)
 
         # 串行调用两个LLM
@@ -272,11 +292,9 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     continue
                 user_id = str(profile.get("user_id", "")).strip()
                 if not user_id:
-                    logger.info(
-                        "LLM returned empty user_id in part1; skipping profile"
-                    )
+                    logger.info("LLM returned empty user_id in part1; skipping profile")
                     continue
-                
+
                 # Validate user_id against participants_profile_list
                 if participant_user_ids and user_id not in participant_user_ids:
                     logger.debug(
@@ -293,9 +311,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     continue
                 user_id = str(profile.get("user_id", "")).strip()
                 if not user_id:
-                    logger.info(
-                        "LLM returned empty user_id in part2; skipping profile"
-                    )
+                    logger.info("LLM returned empty user_id in part2; skipping profile")
                     continue
                 # Validate user_id against participants_profile_list
                 if participant_user_ids and user_id not in participant_user_ids:
@@ -331,15 +347,21 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     combined_profile["user_name"] = part2_profile["user_name"]
                 # 从part2提取role_responsibility
                 if "role_responsibility" in part2_profile:
-                    combined_profile["role_responsibility"] = part2_profile["role_responsibility"]
+                    combined_profile["role_responsibility"] = part2_profile[
+                        "role_responsibility"
+                    ]
                 # 从part2提取opinion_tendency，并过滤掉不合法的type
                 if "opinion_tendency" in part2_profile:
-                    filtered_opinion = filter_opinion_tendency_by_type(part2_profile["opinion_tendency"])
+                    filtered_opinion = filter_opinion_tendency_by_type(
+                        part2_profile["opinion_tendency"]
+                    )
                     if isinstance(filtered_opinion, list):
                         combined_profile["opinion_tendency"] = filtered_opinion
                 # 从part2提取projects_participated，并过滤掉不合法的type
                 if "projects_participated" in part2_profile:
-                    filtered_projects = filter_project_items_by_type(part2_profile["projects_participated"])
+                    filtered_projects = filter_project_items_by_type(
+                        part2_profile["projects_participated"]
+                    )
                     if filtered_projects is not None:
                         combined_profile["projects_participated"] = filtered_projects
 
@@ -394,7 +416,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
         )
         for profile_data in filtered_profiles_data:
             remove_entries_without_evidence(profile_data)
-            
+
         profile_memories: List[ProfileMemory] = []
         for profile_data in filtered_profiles_data:
             if not isinstance(profile_data, dict):
@@ -436,18 +458,23 @@ class ProfileMemoryExtractor(MemoryExtractor):
             conversation_date_map=conversation_date_map,
         )
 
-
-        important_info = extract_group_important_info(request.memcell_list, request.group_id)
+        important_info = extract_group_important_info(
+            request.memcell_list, request.group_id
+        )
         new_evidence_list = convert_important_info_to_evidence(important_info)
         for profile in merged_profiles:
-            old_evidence: Optional[GroupImportanceEvidence] = profile.group_importance_evidence
+            old_evidence: Optional[GroupImportanceEvidence] = (
+                profile.group_importance_evidence
+            )
             new_evidence = merge_group_importance_evidence(
                 old_evidence,
                 new_evidence_list,
                 user_id=profile.user_id,
             )
             if new_evidence:
-                new_evidence.is_important = is_important_to_user(new_evidence.evidence_list)
+                new_evidence.is_important = is_important_to_user(
+                    new_evidence.evidence_list
+                )
                 profile.group_importance_evidence = new_evidence
 
         return merged_profiles
@@ -462,19 +489,13 @@ class ProfileMemoryExtractor(MemoryExtractor):
             data = self._parse_profile_response_payload(response)
             user_profiles = data.get("user_profiles", [])
             if not user_profiles:
-                logger.info(
-                    f"No user profiles found in {part_label}"
-                )
+                logger.info(f"No user profiles found in {part_label}")
                 return None
             return user_profiles
         except Exception as exc:
-            logger.error(
-                f"Failed to parse {part_label} llm response: {exc}"
-            )
+            logger.error(f"Failed to parse {part_label} llm response: {exc}")
             if response:
-                logger.error(
-                    f"{part_label} llm response preview: {response[:500]}"
-                )
+                logger.error(f"{part_label} llm response preview: {response[:500]}")
             return None
 
     @staticmethod
@@ -485,7 +506,9 @@ class ProfileMemoryExtractor(MemoryExtractor):
             return datetime.fromtimestamp(timestamp)
         if isinstance(timestamp, str):
             ts_value = timestamp.strip()
-            iso_timestamp = ts_value.replace("Z", "+00:00") if ts_value.endswith("Z") else ts_value
+            iso_timestamp = (
+                ts_value.replace("Z", "+00:00") if ts_value.endswith("Z") else ts_value
+            )
             try:
                 return datetime.fromisoformat(iso_timestamp)
             except ValueError:
@@ -521,8 +544,6 @@ class ProfileMemoryExtractor(MemoryExtractor):
             return {"user_profiles": parsed}
         return json.loads(parsed)
 
-
-
     async def extract_profile_companion(
         self, request: ProfileMemoryExtractRequest
     ) -> Optional[List[ProfileMemory]]:
@@ -549,11 +570,13 @@ class ProfileMemoryExtractor(MemoryExtractor):
         print(f"[ProfileExtractor] 收到 {len(request.memcell_list)} 个 MemCell")
         print(f"[ProfileExtractor] request.user_id_list: {request.user_id_list}")
         print(f"[ProfileExtractor] request.group_id: {request.group_id}")
-        
+
         # Extract user mapping from memcells and build conversation text
         user_id_to_name = extract_user_mapping_from_memcells(request.memcell_list)
-        print(f"[ProfileExtractor] user_id_to_name (从 original_data 提取): {user_id_to_name}")
-        
+        print(
+            f"[ProfileExtractor] user_id_to_name (从 original_data 提取): {user_id_to_name}"
+        )
+
         # 🔧 如果 user_id_to_name 为空，从 participants 字段提取
         if not user_id_to_name:
             print(f"[ProfileExtractor] user_id_to_name 为空，尝试从 participants 提取")
@@ -562,22 +585,26 @@ class ProfileMemoryExtractor(MemoryExtractor):
                 if participants and isinstance(participants, list):
                     for user_id in participants:
                         if user_id and user_id not in user_id_to_name:
-                            user_id_to_name[user_id] = user_id  # 使用 user_id 作为默认名称
-                    print(f"[ProfileExtractor] 从 participants 提取到: {list(participants)}")
-        
+                            user_id_to_name[user_id] = (
+                                user_id  # 使用 user_id 作为默认名称
+                            )
+                    print(
+                        f"[ProfileExtractor] 从 participants 提取到: {list(participants)}"
+                    )
+
         # 🔧 如果还是为空，使用 request.user_id_list
         if not user_id_to_name and request.user_id_list:
             print(f"[ProfileExtractor] 依然为空，使用 request.user_id_list")
             for user_id in request.user_id_list:
                 user_id_to_name[user_id] = user_id
-        
+
         print(f"[ProfileExtractor] 最终 user_id_to_name: {user_id_to_name}")
         # print(f"[ProfileMemoryExtractor] user_id_to_name: {user_id_to_name}")
         # Build conversation text from all memcells
         conversation_lines: List[str] = []
-        user_profiles: Dict[str, Dict[str, Any]] = (
-            {}
-        )  # user_id -> {name, message_count}
+        user_profiles: Dict[
+            str, Dict[str, Any]
+        ] = {}  # user_id -> {name, message_count}
 
         # Build evidence maps (date per conversation/event id) for evidences binding
         conversation_date_map: Dict[str, str] = {}
@@ -587,22 +614,28 @@ class ProfileMemoryExtractor(MemoryExtractor):
         for memcell in request.memcell_list:
             # 🔧 直接使用 episode，因为 original_data 经常为空
             episode_text, event_id = build_episode_text(memcell, user_id_to_name)
-            
+
             if episode_text:
                 conversation_lines.append(episode_text)
                 print(f"[ProfileExtractor] 使用 episode_text: {episode_text[:200]}...")
                 conversation_id = event_id
             else:
-                print(f"[ProfileExtractor] ⚠️  episode 为空，尝试 conversation_text fallback")
+                print(
+                    f"[ProfileExtractor] ⚠️  episode 为空，尝试 conversation_text fallback"
+                )
                 # Fallback: 尝试 conversation_text
                 conversation_text, conversation_id = build_conversation_text(
                     memcell, user_id_to_name
                 )
                 if conversation_text and conversation_text.strip():
                     conversation_lines.append(conversation_text)
-                    print(f"[ProfileExtractor] 使用 conversation_text: {conversation_text[:200]}...")
+                    print(
+                        f"[ProfileExtractor] 使用 conversation_text: {conversation_text[:200]}..."
+                    )
                 else:
-                    print(f"[ProfileExtractor] ❌ episode 和 conversation_text 都为空！")
+                    print(
+                        f"[ProfileExtractor] ❌ episode 和 conversation_text 都为空！"
+                    )
 
             # Collect user statistics
             # for user_id in getattr(memcell, "user_id_list", []) or []:
@@ -646,7 +679,9 @@ class ProfileMemoryExtractor(MemoryExtractor):
             return None
 
         conversation_text = "\n".join(conversation_lines)
-        print(f"[ProfileExtractor] conversation_text 长度: {len(conversation_text)} 字符")
+        print(
+            f"[ProfileExtractor] conversation_text 长度: {len(conversation_text)} 字符"
+        )
         print(f"[ProfileExtractor] user_profiles: {user_profiles}")
         logger.info(
             f"[ProfileMemoryExtractor] Built companion conversation with {len(conversation_lines)} segments"
@@ -659,7 +694,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
         old_profiles_map: Dict[str, ProfileMemory] = {}
         if request.old_memory_list:
             for mem in request.old_memory_list:
-                if mem.memory_type == MemoryType.PROFILE and hasattr(mem, 'user_id'):
+                if mem.memory_type == MemoryType.PROFILE and hasattr(mem, "user_id"):
                     old_profiles_map[mem.user_id] = mem
 
         # Extract Part3 profiles for each user (🚀 并行化 LLM 调用)
@@ -667,11 +702,12 @@ class ProfileMemoryExtractor(MemoryExtractor):
 
         # 定义单个用户的提取函数
         async def extract_single_user_companion_profile(
-            user_id: str, 
-            user_info: Dict[str, Any]
+            user_id: str, user_info: Dict[str, Any]
         ) -> List[ProfileMemory]:
             """为单个用户提取 companion profile（并行化）"""
-            print(f"[ProfileExtractor] 开始提取用户 {user_info['user_name']} (user_id={user_id}) 的 Profile")
+            print(
+                f"[ProfileExtractor] 开始提取用户 {user_info['user_name']} (user_id={user_id}) 的 Profile"
+            )
             logger.info(
                 f"[ProfileMemoryExtractor] Analyzing companion profile for: {user_info['user_name']} "
                 f"({user_info['message_count']} messages)"
@@ -687,9 +723,9 @@ class ProfileMemoryExtractor(MemoryExtractor):
             if user_id in old_profiles_map:
                 old_profile = old_profiles_map[user_id]
                 prompt += f"\n**Previous Profile Summary:**\n"
-                if hasattr(old_profile, 'personality') and old_profile.personality:
+                if hasattr(old_profile, "personality") and old_profile.personality:
                     prompt += f"Personality: {old_profile.personality}\n"
-                if hasattr(old_profile, 'soft_skills') and old_profile.soft_skills:
+                if hasattr(old_profile, "soft_skills") and old_profile.soft_skills:
                     prompt += f"Soft Skills: {old_profile.soft_skills}\n"
 
             prompt += f"\n**New Conversation:**\n{conversation_text}\n"
@@ -698,27 +734,27 @@ class ProfileMemoryExtractor(MemoryExtractor):
                 f"\n**Task:** For user {user_info['user_name']}, extract ONLY these fields as JSON: "
                 "personality, way_of_decision_making, working_habit_preference, interests, tendency, "
                 "motivation_system, fear_system, value_system, humor_use, colloquialism, output_reasoning. "
-                "For list-type fields, each item must be an object: {\\\"value\\\": string, \\\"evidences\\\": [string], \\\"level\\\": string?}. "
+                'For list-type fields, each item must be an object: {\\"value\\": string, \\"evidences\\": [string], \\"level\\": string?}. '
                 "Use evidences referencing conversation ids when possible (e.g., [conversation_id:EVENT_ID] or EVENT_ID). "
                 "Include user_id and user_name. Use ASCII quotes only. Return one fenced JSON block, no extra text.\n"
                 "Exact response template:\n"
                 "```json\n"
                 "{\n"
-                "  \"user_profiles\": [\n"
+                '  "user_profiles": [\n'
                 "    {\n"
-                "      \"user_id\": \"USER_ID\",\n"
-                "      \"user_name\": \"USER_NAME\",\n"
-                "      \"personality\": [],\n"
-                "      \"way_of_decision_making\": [],\n"
-                "      \"working_habit_preference\": [],\n"
-                "      \"interests\": [],\n"
-                "      \"tendency\": [],\n"
-                "      \"motivation_system\": [],\n"
-                "      \"fear_system\": [],\n"
-                "      \"value_system\": [],\n"
-                "      \"humor_use\": [],\n"
-                "      \"colloquialism\": [],\n"
-                "      \"output_reasoning\": \"\"\n"
+                '      "user_id": "USER_ID",\n'
+                '      "user_name": "USER_NAME",\n'
+                '      "personality": [],\n'
+                '      "way_of_decision_making": [],\n'
+                '      "working_habit_preference": [],\n'
+                '      "interests": [],\n'
+                '      "tendency": [],\n'
+                '      "motivation_system": [],\n'
+                '      "fear_system": [],\n'
+                '      "value_system": [],\n'
+                '      "humor_use": [],\n'
+                '      "colloquialism": [],\n'
+                '      "output_reasoning": ""\n'
                 "    }\n"
                 "  ]\n"
                 "}\n"
@@ -727,7 +763,9 @@ class ProfileMemoryExtractor(MemoryExtractor):
 
             # Call LLM for analysis
             try:
-                print(f"[ProfileExtractor] 调用 LLM 提取 {user_info['user_name']} 的 Profile...")
+                print(
+                    f"[ProfileExtractor] 调用 LLM 提取 {user_info['user_name']} 的 Profile..."
+                )
                 response_text = await self.llm_provider.generate(
                     prompt, temperature=0.3
                 )
@@ -739,7 +777,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
                 # First try: structured JSON path compatible with existing normalization
                 structured_profiles: Optional[List[Dict[str, Any]]] = None
                 try:
-                    #annotated = self._annotate_relative_dates(response_text)
+                    # annotated = self._annotate_relative_dates(response_text)
                     annotated = response_text
                     structured_profiles = self._extract_user_profiles_from_response(
                         annotated, "companion profile"
@@ -748,9 +786,11 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     structured_profiles = None
 
                 user_profiles_result: List[ProfileMemory] = []
-                
+
                 if structured_profiles:
-                    print(f"[ProfileExtractor] 解析出 {len(structured_profiles)} 个结构化 Profile")
+                    print(
+                        f"[ProfileExtractor] 解析出 {len(structured_profiles)} 个结构化 Profile"
+                    )
                     # Ensure user_id/user_name present and add fallback evidences when missing
                     # Also route through profile_payload_to_memory for unified normalization
                     fallback_evidences: List[str] = []
@@ -758,7 +798,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     batch_event_ids: List[str] = [
                         str(mc.event_id)
                         for mc in request.memcell_list
-                        if hasattr(mc, 'event_id') and mc.event_id
+                        if hasattr(mc, "event_id") and mc.event_id
                     ]
                     for ev in batch_event_ids:
                         ev_date = conversation_date_map.get(ev) or default_date
@@ -825,14 +865,18 @@ class ProfileMemoryExtractor(MemoryExtractor):
                             group_id=request.group_id or "",
                             project_data=None,
                             valid_conversation_ids=valid_conversation_ids,
-                            #default_date=default_date,
+                            # default_date=default_date,
                             conversation_date_map=conversation_date_map,
                         )
                         if mem:
                             user_profiles_result.append(mem)
-                            print(f"[ProfileExtractor] ✅ 成功转换 Profile: user_id={mem.user_id}")
+                            print(
+                                f"[ProfileExtractor] ✅ 成功转换 Profile: user_id={mem.user_id}"
+                            )
                         else:
-                            print(f"[ProfileExtractor] ⚠️  profile_payload_to_memory 返回 None")
+                            print(
+                                f"[ProfileExtractor] ⚠️  profile_payload_to_memory 返回 None"
+                            )
                 else:
                     print(f"[ProfileExtractor] 未能解析结构化 Profile，使用 fallback")
                     # Fallback: free-text analysis stored under personality with evidences bound
@@ -842,7 +886,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
                     batch_event_ids: List[str] = [
                         str(mc.event_id)
                         for mc in request.memcell_list
-                        if hasattr(mc, 'event_id') and mc.event_id
+                        if hasattr(mc, "event_id") and mc.event_id
                     ]
                     for ev in batch_event_ids:
                         ev_date = conversation_date_map.get(ev) or default_date
@@ -855,7 +899,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
                         ori_event_id_list=[
                             mc.event_id
                             for mc in request.memcell_list
-                            if hasattr(mc, 'event_id')
+                            if hasattr(mc, "event_id")
                         ],
                         group_id=request.group_id or "",
                         personality=[
@@ -875,9 +919,13 @@ class ProfileMemoryExtractor(MemoryExtractor):
                         group_importance_evidence=None,
                     )
                     user_profiles_result.append(profile_memory)
-                    print(f"[ProfileExtractor] ✅ 使用 fallback Profile: user_id={user_id}")
-                
-                print(f"[ProfileExtractor] 最终返回 {len(user_profiles_result)} 个 Profile")
+                    print(
+                        f"[ProfileExtractor] ✅ 使用 fallback Profile: user_id={user_id}"
+                    )
+
+                print(
+                    f"[ProfileExtractor] 最终返回 {len(user_profiles_result)} 个 Profile"
+                )
                 return user_profiles_result
 
             except Exception as exc:
@@ -887,33 +935,42 @@ class ProfileMemoryExtractor(MemoryExtractor):
                 )
                 print(f"[ProfileExtractor] ❌ 提取失败: {exc}")
                 import traceback
+
                 print(traceback.format_exc())
                 return []
 
         # 🚀 并行执行所有用户的 Profile 提取
-        logger.info(f"[ProfileMemoryExtractor] 🚀 开始并行提取 {len(user_profiles)} 个用户的 companion profiles")
-        print(f"[ProfileExtractor] 🚀 开始并行提取 {len(user_profiles)} 个用户的 companion profiles")
-        
+        logger.info(
+            f"[ProfileMemoryExtractor] 🚀 开始并行提取 {len(user_profiles)} 个用户的 companion profiles"
+        )
+        print(
+            f"[ProfileExtractor] 🚀 开始并行提取 {len(user_profiles)} 个用户的 companion profiles"
+        )
+
         tasks = [
             extract_single_user_companion_profile(user_id, user_info)
             for user_id, user_info in user_profiles.items()
         ]
-        
+
         print(f"[ProfileExtractor] 创建了 {len(tasks)} 个提取任务")
-        
+
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         print(f"[ProfileExtractor] 并行提取完成，收到 {len(results)} 个结果")
-        
+
         # 收集所有成功的 profiles
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                logger.error(f"[ProfileMemoryExtractor] Profile extraction task failed: {result}")
-                print(f"[ProfileExtractor] 任务 {i+1} 失败: {result}")
+                logger.error(
+                    f"[ProfileMemoryExtractor] Profile extraction task failed: {result}"
+                )
+                print(f"[ProfileExtractor] 任务 {i + 1} 失败: {result}")
                 continue
             if isinstance(result, list):
                 companion_profiles.extend(result)
-                print(f"[ProfileExtractor] 任务 {i+1} 成功，返回 {len(result)} 个 Profile")
+                print(
+                    f"[ProfileExtractor] 任务 {i + 1} 成功，返回 {len(result)} 个 Profile"
+                )
 
         if not companion_profiles:
             logger.warning(
@@ -925,5 +982,7 @@ class ProfileMemoryExtractor(MemoryExtractor):
         logger.info(
             f"[ProfileMemoryExtractor] Successfully extracted {len(companion_profiles)} companion profiles"
         )
-        print(f"[ProfileExtractor] ✅ 最终成功提取 {len(companion_profiles)} 个 companion profiles")
+        print(
+            f"[ProfileExtractor] ✅ 最终成功提取 {len(companion_profiles)} 个 companion profiles"
+        )
         return companion_profiles

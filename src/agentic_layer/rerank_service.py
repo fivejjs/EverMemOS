@@ -8,13 +8,14 @@ This module provides methods to call DeepInfra API for reranking retrieved memor
 
 from __future__ import annotations
 
-import os
 import asyncio
-import aiohttp
 import logging
+import os
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Union
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Union
+
+import aiohttp
 import numpy as np
 
 from core.di import get_bean, service
@@ -408,11 +409,11 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
             提取的文本内容
         """
         # 优先使用episode，其次使用summary，最后使用subject
-        if hasattr(memory, 'episode') and memory.episode:
+        if hasattr(memory, "episode") and memory.episode:
             return memory.episode
-        elif hasattr(memory, 'summary') and memory.summary:
+        elif hasattr(memory, "summary") and memory.summary:
             return memory.summary
-        elif hasattr(memory, 'subject') and memory.subject:
+        elif hasattr(memory, "subject") and memory.subject:
             return memory.subject
         return str(memory)
 
@@ -436,7 +437,7 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
             return await self._rerank_all_hits(query, retrieve_response, instruction)
 
         # 原有的处理RetrieveMemResponse的逻辑
-        if not hasattr(retrieve_response, 'memories') or not retrieve_response.memories:
+        if not hasattr(retrieve_response, "memories") or not retrieve_response.memories:
             # 如果没有记忆数据，直接返回空结果
             return RerankMemResponse(
                 memories=[],
@@ -446,8 +447,8 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
                 original_data=[],
                 total_count=0,
                 has_more=False,
-                query_metadata=getattr(retrieve_response, 'query_metadata', {}),
-                metadata=getattr(retrieve_response, 'metadata', {}),
+                query_metadata=getattr(retrieve_response, "query_metadata", {}),
+                metadata=getattr(retrieve_response, "metadata", {}),
             )
 
         # 收集所有记忆和对应的文本
@@ -472,17 +473,16 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
                 memories=retrieve_response.memories,
                 scores=retrieve_response.scores,
                 rerank_scores=[],
-                importance_scores=getattr(retrieve_response, 'importance_scores', []),
-                original_data=getattr(retrieve_response, 'original_data', []),
-                total_count=getattr(retrieve_response, 'total_count', 0),
-                has_more=getattr(retrieve_response, 'has_more', False),
-                query_metadata=getattr(retrieve_response, 'query_metadata', {}),
-                metadata=getattr(retrieve_response, 'metadata', {}),
+                importance_scores=getattr(retrieve_response, "importance_scores", []),
+                original_data=getattr(retrieve_response, "original_data", []),
+                total_count=getattr(retrieve_response, "total_count", 0),
+                has_more=getattr(retrieve_response, "has_more", False),
+                query_metadata=getattr(retrieve_response, "query_metadata", {}),
+                metadata=getattr(retrieve_response, "metadata", {}),
             )
 
         # 调用重排序API
         try:
-
             rerank_result = await self._make_rerank_request(
                 query, all_texts, instruction
             )
@@ -551,7 +551,7 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
 
             # 保持原有的importance_scores
             reranked_importance_scores = getattr(
-                retrieve_response, 'importance_scores', []
+                retrieve_response, "importance_scores", []
             )
 
             return RerankMemResponse(
@@ -561,11 +561,11 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
                 importance_scores=reranked_importance_scores,
                 original_data=reranked_original_data,
                 total_count=getattr(
-                    retrieve_response, 'total_count', len(all_memories)
+                    retrieve_response, "total_count", len(all_memories)
                 ),
-                has_more=getattr(retrieve_response, 'has_more', False),
-                query_metadata=getattr(retrieve_response, 'query_metadata', {}),
-                metadata=getattr(retrieve_response, 'metadata', {}),
+                has_more=getattr(retrieve_response, "has_more", False),
+                query_metadata=getattr(retrieve_response, "query_metadata", {}),
+                metadata=getattr(retrieve_response, "metadata", {}),
             )
 
         except Exception as e:
@@ -575,12 +575,12 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
                 memories=retrieve_response.memories,
                 scores=retrieve_response.scores,
                 rerank_scores=[],
-                importance_scores=getattr(retrieve_response, 'importance_scores', []),
-                original_data=getattr(retrieve_response, 'original_data', []),
-                total_count=getattr(retrieve_response, 'total_count', 0),
-                has_more=getattr(retrieve_response, 'has_more', False),
-                query_metadata=getattr(retrieve_response, 'query_metadata', {}),
-                metadata=getattr(retrieve_response, 'metadata', {}),
+                importance_scores=getattr(retrieve_response, "importance_scores", []),
+                original_data=getattr(retrieve_response, "original_data", []),
+                total_count=getattr(retrieve_response, "total_count", 0),
+                has_more=getattr(retrieve_response, "has_more", False),
+                query_metadata=getattr(retrieve_response, "query_metadata", {}),
+                metadata=getattr(retrieve_response, "metadata", {}),
             )
 
     async def _rerank_all_hits(
@@ -643,7 +643,7 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
                 if 0 <= original_idx < len(all_hits):
                     hit = all_hits[original_idx].copy()  # 复制hit以避免修改原始数据
                     # 添加重排序分数到hit中
-                    hit['_rerank_score'] = rerank_scores[original_idx]
+                    hit["_rerank_score"] = rerank_scores[original_idx]
                     reranked_hits.append(hit)
 
             # 如果指定了top_k，则只返回前top_k个结果
@@ -675,23 +675,23 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
             提取的文本内容
         """
         # 优先使用episode，其次使用summary，最后使用subject
-        if '_source' in hit:
+        if "_source" in hit:
             # ES格式
-            source = hit['_source']
-            if source.get('episode'):
-                return source['episode']
-            elif source.get('summary'):
-                return source['summary']
-            elif source.get('subject'):
-                return source['subject']
+            source = hit["_source"]
+            if source.get("episode"):
+                return source["episode"]
+            elif source.get("summary"):
+                return source["summary"]
+            elif source.get("subject"):
+                return source["subject"]
         else:
             # Milvus格式
-            if hit.get('episode'):
-                return hit['episode']
-            elif hit.get('summary'):
-                return hit['summary']
-            elif hit.get('subject'):
-                return hit['subject']
+            if hit.get("episode"):
+                return hit["episode"]
+            elif hit.get("summary"):
+                return hit["summary"]
+            elif hit.get("subject"):
+                return hit["subject"]
 
         return str(hit)
 
@@ -705,10 +705,10 @@ class DeepInfraRerankService(DeepInfraRerankServiceInterface):
         Returns:
             得分
         """
-        if '_score' in hit:
-            return hit['_score']
-        elif 'score' in hit:
-            return hit['score']
+        if "_score" in hit:
+            return hit["_score"]
+        elif "score" in hit:
+            return hit["score"]
         return 1.0
 
 

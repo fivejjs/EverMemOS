@@ -1,8 +1,8 @@
-from typing import Optional, Any, Dict
-from .interfaces import AuthorizationStrategy
-from .enums import Role
-
 import asyncio
+from typing import Any, Dict, Optional
+
+from .enums import Role
+from .interfaces import AuthorizationStrategy
 
 
 class DefaultAuthorizationStrategy(AuthorizationStrategy):
@@ -31,7 +31,7 @@ class DefaultAuthorizationStrategy(AuthorizationStrategy):
             return False
 
         # 检查用户角色
-        user_role = user_info.get('role', Role.USER)
+        user_role = user_info.get("role", Role.USER)
         user_role = Role(user_role)
 
         # 角色权限检查
@@ -80,7 +80,7 @@ class RoleBasedAuthorizationStrategy(AuthorizationStrategy):
             return False
 
         # 获取用户角色
-        user_role_str = user_info.get('role', Role.USER.value)
+        user_role_str = user_info.get("role", Role.USER.value)
         try:
             user_role = Role(user_role_str)
         except ValueError:

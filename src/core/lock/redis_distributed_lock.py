@@ -6,13 +6,13 @@ Redis分布式锁实现
 """
 
 import asyncio
-from typing import Optional, Union
 from contextlib import asynccontextmanager
+from typing import Optional, Union
 
-from core.di.decorators import component
-from core.observation.logger import get_logger
 from component.redis_provider import RedisProvider
+from core.di.decorators import component
 from core.di.utils import get_bean_by_type
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -33,7 +33,7 @@ class RedisDistributedLock:
     单个锁的实例，负责特定资源的锁操作
     """
 
-    def __init__(self, resource: str, lock_manager: 'RedisDistributedLockManager'):
+    def __init__(self, resource: str, lock_manager: "RedisDistributedLockManager"):
         """
         初始化分布式锁
 
@@ -78,9 +78,7 @@ class RedisDistributedLock:
             if acquired:
                 try:
                     # 调用锁管理器的内部方法释放锁
-                    await self.lock_manager._release_lock(
-                        self.resource
-                    )  # pylint: disable=protected-access
+                    await self.lock_manager._release_lock(self.resource)  # pylint: disable=protected-access
                     self._acquired = False
                 except (ConnectionError, TimeoutError, OSError) as e:
                     logger.error("释放锁失败: %s, error: %s", self.resource, e)
@@ -538,7 +536,6 @@ def with_distributed_lock(
 
     def decorator(func):
         async def wrapper(*args, **kwargs):
-
             # 获取锁管理器
             lock_manager = get_bean_by_type(RedisDistributedLockManager)
 

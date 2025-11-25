@@ -7,16 +7,18 @@ MongoDB 基础仓库类
 
 from abc import ABC
 from contextlib import asynccontextmanager
-from typing import Optional, TypeVar, Generic, Type, Union, List
+from typing import Generic, List, Optional, Type, TypeVar, Union
+
 from beanie import PydanticObjectId
-from core.oxm.mongo.document_base import DocumentBase
 from motor.motor_asyncio import AsyncIOMotorClientSession
+
 from core.observation.logger import get_logger
+from core.oxm.mongo.document_base import DocumentBase
 
 logger = get_logger(__name__)
 
 # 泛型类型变量
-T = TypeVar('T', bound=DocumentBase)
+T = TypeVar("T", bound=DocumentBase)
 
 
 class BaseRepository(ABC, Generic[T]):
@@ -110,7 +112,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.info(
                 "✅ 创建文档成功 [%s]: %s",
                 self.model_name,
-                getattr(document, 'id', 'unknown'),
+                getattr(document, "id", "unknown"),
             )
             return document
         except Exception as e:
@@ -153,7 +155,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.info(
                 "✅ 更新文档成功 [%s]: %s",
                 self.model_name,
-                getattr(document, 'id', 'unknown'),
+                getattr(document, "id", "unknown"),
             )
             return document
         except Exception as e:
@@ -204,7 +206,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.info(
                 "✅ 删除文档成功 [%s]: %s",
                 self.model_name,
-                getattr(document, 'id', 'unknown'),
+                getattr(document, "id", "unknown"),
             )
             return True
         except Exception as e:

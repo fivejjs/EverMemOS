@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Union, AsyncGenerator, List
+from typing import AsyncGenerator, List, Union
+
 from component.llm_adapter.llm.completion import (
     ChatCompletionRequest,
     ChatCompletionResponse,

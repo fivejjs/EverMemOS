@@ -5,12 +5,14 @@ MongoDB 文档基类
 """
 
 from datetime import datetime
+
 from common_utils.datetime_utils import to_timezone
 
 try:
-    from beanie import Document
-    from pydantic import model_validator, BaseModel
     from typing import Self
+
+    from beanie import Document
+    from pydantic import BaseModel, model_validator
 
     BEANIE_AVAILABLE = True
 except ImportError:
@@ -100,7 +102,7 @@ if BEANIE_AVAILABLE:
 
             return obj
 
-        @model_validator(mode='after')
+        @model_validator(mode="after")
         def check_datetimes_are_aware(self) -> Self:
             """
             递归遍历模型的所有字段，确保任何 datetime 对象都是 'aware' (包含时区信息).
@@ -112,7 +114,6 @@ if BEANIE_AVAILABLE:
             for field_name, value in self:
                 new_value = self._recursive_datetime_check(value, field_name, depth=0)
                 if new_value is not value:  # 只在值发生变化时更新
-
                     # 使用 __dict__ 直接更新值，避免触发验证器
                     self.__dict__[field_name] = new_value
             return self

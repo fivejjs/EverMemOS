@@ -5,15 +5,16 @@ Kafka ConsumerRecord 队列项实现
 使用 BSON 格式处理二进制数据，确保数据完整性
 """
 
-import json
 import base64
-from typing import Optional, Sequence, Tuple, Any, Dict
+import json
 from dataclasses import dataclass
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 import bson
-
 from aiokafka import ConsumerRecord
+
 from core.observation.logger import get_logger
+
 from .redis_group_queue_item import RedisGroupQueueItem
 
 logger = get_logger(__name__)
@@ -78,11 +79,11 @@ class KafkaConsumerRecordItem(RedisGroupQueueItem):
 
     def _encode_bytes_to_base64(self, data: bytes) -> str:
         """将 bytes 数据编码为 base64 字符串"""
-        return base64.b64encode(data).decode('utf-8')
+        return base64.b64encode(data).decode("utf-8")
 
     def _decode_base64_to_bytes(self, data: str) -> bytes:
         """将 base64 字符串解码为 bytes 数据"""
-        return base64.b64decode(data.encode('utf-8'))
+        return base64.b64decode(data.encode("utf-8"))
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -128,7 +129,7 @@ class KafkaConsumerRecordItem(RedisGroupQueueItem):
             raise ValueError(f"BSON 序列化失败: {e}") from e
 
     @classmethod
-    def from_json_str(cls, json_str: str) -> 'KafkaConsumerRecordItem':
+    def from_json_str(cls, json_str: str) -> "KafkaConsumerRecordItem":
         """
         不支持 JSON 反序列化，请使用 BSON 反序列化
         """
@@ -137,7 +138,7 @@ class KafkaConsumerRecordItem(RedisGroupQueueItem):
         )
 
     @classmethod
-    def from_bson_bytes(cls, bson_bytes: bytes) -> 'KafkaConsumerRecordItem':
+    def from_bson_bytes(cls, bson_bytes: bytes) -> "KafkaConsumerRecordItem":
         """
         从 BSON 字节数据反序列化
 
@@ -195,7 +196,7 @@ class KafkaConsumerRecordItem(RedisGroupQueueItem):
                         headers_bytes.append((name, self._decode_base64_to_bytes(data)))
                     except Exception:
                         # 如果解码失败，编码为 UTF-8 bytes
-                        headers_bytes.append((name, data.encode('utf-8')))
+                        headers_bytes.append((name, data.encode("utf-8")))
                 else:
                     headers_bytes.append((name, bytes(data)))
 

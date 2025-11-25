@@ -1,5 +1,7 @@
 """Profile memory extraction package."""
 
+from .extractor import ProfileMemoryExtractor
+from .merger import ProfileMemoryMerger
 from .types import (
     GroupImportanceEvidence,
     ImportanceEvidence,
@@ -7,8 +9,6 @@ from .types import (
     ProfileMemoryExtractRequest,
     ProjectInfo,
 )
-from .merger import ProfileMemoryMerger
-from .extractor import ProfileMemoryExtractor
 
 __all__ = [
     "GroupImportanceEvidence",

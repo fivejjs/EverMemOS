@@ -1,13 +1,20 @@
-import os
 import logging
-from typing import Optional, Dict, Any, List
+import os
 from dataclasses import dataclass
-from pymilvus import Collection, DataType, FieldSchema, utility, CollectionSchema
+from typing import Any, Dict, List, Optional
+
+from pymilvus import (
+    Collection,
+    CollectionSchema,
+    DataType,
+    FieldSchema,
+    connections,
+    utility,
+)
 from pymilvus.client.types import ConsistencyLevel, LoadState
 
-from pymilvus import connections
-from core.oxm.milvus.async_collection import AsyncCollection
 from common_utils.datetime_utils import get_now_with_timezone
+from core.oxm.milvus.async_collection import AsyncCollection
 
 logger = logging.getLogger(__name__)
 
@@ -604,10 +611,11 @@ if __name__ == "__main__":
                 field_name="vector",
                 index_type="HNSW",  # 高效的近似最近邻搜索
                 metric_type="COSINE",  # 欧氏距离
-            params={
-                "M": 16,  # 每个节点的最大边数
-                "efConstruction": 200,  # 构建时的搜索宽度
-            })
+                params={
+                    "M": 16,  # 每个节点的最大边数
+                    "efConstruction": 200,  # 构建时的搜索宽度
+                },
+            )
         ]
         _DB_USING = "default"
 
@@ -633,9 +641,10 @@ if __name__ == "__main__":
                 index_type="HNSW",  # 高效的近似最近邻搜索
                 metric_type="COSINE",  # 欧氏距离
                 params={
-                  "M": 16,  # 每个节点的最大边数
-                  "efConstruction": 200,  # 构建时的搜索宽度
-                })
+                    "M": 16,  # 每个节点的最大边数
+                    "efConstruction": 200,  # 构建时的搜索宽度
+                },
+            )
         ]
         _DB_USING = "default"
 

@@ -10,11 +10,11 @@ from infra_layer.adapters.out.search.repository.episodic_memory_es_repository im
 from infra_layer.adapters.out.search.repository.episodic_memory_milvus_repository import (
     EpisodicMemoryMilvusRepository,
 )
-from infra_layer.adapters.out.search.repository.semantic_memory_milvus_repository import (
-    SemanticMemoryMilvusRepository,
-)
 from infra_layer.adapters.out.search.repository.event_log_milvus_repository import (
     EventLogMilvusRepository,
+)
+from infra_layer.adapters.out.search.repository.semantic_memory_milvus_repository import (
+    SemanticMemoryMilvusRepository,
 )
 
 __all__ = [
@@ -23,4 +23,3 @@ __all__ = [
     "SemanticMemoryMilvusRepository",
     "EventLogMilvusRepository",
 ]
-

@@ -5,13 +5,14 @@ ConversationDataRepository 真实数据库实现
 """
 
 from typing import List, Optional
-from core.observation.logger import get_logger
-from core.di.decorators import repository
+
 from biz_layer.conversation_data_repo import ConversationDataRepository
-from memory_layer.memcell_extractor.base_memcell_extractor import RawData
 from biz_layer.mem_db_operations import _normalize_datetime_for_storage
 from common_utils.datetime_utils import get_now_with_timezone
 from core.di import get_bean
+from core.di.decorators import repository
+from core.observation.logger import get_logger
+from memory_layer.memcell_extractor.base_memcell_extractor import RawData
 
 logger = get_logger(__name__)
 
@@ -79,8 +80,8 @@ class ConversationDataRepositoryImpl(ConversationDataRepository):
                     timestamp = None
                     if raw_data.content:
                         timestamp = raw_data.content.get(
-                            'timestamp'
-                        ) or raw_data.content.get('createTime')
+                            "timestamp"
+                        ) or raw_data.content.get("createTime")
 
                     # 确保时间戳是datetime对象
                     if timestamp:

@@ -8,10 +8,10 @@
 import asyncio
 from typing import List
 
+from biz_layer.memcell_sync import MemCellSyncService
 from core.di import get_bean_by_type
 from core.observation.logger import get_logger
 from infra_layer.adapters.out.persistence.document.memory.memcell import MemCell
-from biz_layer.memcell_sync import MemCellSyncService
 
 logger = get_logger(__name__)
 
@@ -35,4 +35,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

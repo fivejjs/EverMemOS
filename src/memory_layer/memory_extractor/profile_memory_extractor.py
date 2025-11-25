@@ -4,8 +4,8 @@ from .profile_memory import (
     GroupImportanceEvidence,
     ImportanceEvidence,
     ProfileMemory,
-    ProfileMemoryExtractRequest,
     ProfileMemoryExtractor,
+    ProfileMemoryExtractRequest,
     ProfileMemoryMerger,
     ProjectInfo,
 )

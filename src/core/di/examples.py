@@ -8,21 +8,21 @@ from typing import List
 
 from di import (
     component,
-    service,
-    repository,
+    disable_mock_mode,
+    enable_mock_mode,
     factory,
-    mock_impl,
     get_bean,
     get_bean_by_type,
     get_beans_by_type,
-    enable_mock_mode,
-    disable_mock_mode,
-    scan_packages,
+    mock_impl,
     register_bean,
     register_factory,
+    repository,
+    scan_packages,
+    service,
 )
-from core.di.utils import print_container_info
 
+from core.di.utils import print_container_info
 
 # ===================== 接口定义 =====================
 
@@ -232,9 +232,9 @@ def demo_basic_usage():
     # 根据名称获取Bean
     user_service = get_bean("user_service")
     assert user_service is not None, "应该能够获取到 user_service"
-    assert isinstance(
-        user_service, UserServiceImpl
-    ), "获取的应该是 UserServiceImpl 实例"
+    assert isinstance(user_service, UserServiceImpl), (
+        "获取的应该是 UserServiceImpl 实例"
+    )
 
     user = user_service.get_user(1)
     print(f"获取到的用户: {user}")
@@ -245,9 +245,9 @@ def demo_basic_usage():
     # 根据类型获取Bean（Primary实现）
     notification_service = get_bean_by_type(NotificationService)
     assert notification_service is not None, "应该能够获取到通知服务"
-    assert isinstance(
-        notification_service, PrimaryNotificationService
-    ), "应该获取到Primary实现"
+    assert isinstance(notification_service, PrimaryNotificationService), (
+        "应该获取到Primary实现"
+    )
 
     notification_service.send_notification("欢迎使用系统", "admin@example.com")
     print("✅ 基本用法演示通过")
@@ -259,23 +259,23 @@ def demo_multiple_implementations():
 
     # 获取所有NotificationService实现
     notification_services = get_beans_by_type(NotificationService)
-    assert (
-        len(notification_services) >= 3
-    ), f"应该至少有3个通知服务实现，实际获取到{len(notification_services)}个"
+    assert len(notification_services) >= 3, (
+        f"应该至少有3个通知服务实现，实际获取到{len(notification_services)}个"
+    )
     print(f"发现 {len(notification_services)} 个通知服务实现")
 
     # 验证每个服务都是NotificationService的实例
     for i, service in enumerate(notification_services):
-        assert isinstance(
-            service, NotificationService
-        ), f"第{i+1}个服务应该是NotificationService的实例"
-        service.send_notification(f"消息{i+1}", f"user{i+1}@example.com")
+        assert isinstance(service, NotificationService), (
+            f"第{i + 1}个服务应该是NotificationService的实例"
+        )
+        service.send_notification(f"消息{i + 1}", f"user{i + 1}@example.com")
 
     # 获取Primary实现
     primary_service = get_bean_by_type(NotificationService)
-    assert isinstance(
-        primary_service, PrimaryNotificationService
-    ), "Primary实现应该是PrimaryNotificationService"
+    assert isinstance(primary_service, PrimaryNotificationService), (
+        "Primary实现应该是PrimaryNotificationService"
+    )
     print(f"Primary实现: {type(primary_service).__name__}")
     print("✅ 多实现演示通过")
 
@@ -334,12 +334,12 @@ def demo_mock_mode():
     restored_notification_service = get_bean_by_type(NotificationService)
 
     # 类型应该和原始的一致
-    assert type(restored_user_service) == type(
-        original_user_service
-    ), "禁用Mock模式后应该恢复原始用户服务实现"
-    assert type(restored_notification_service) == type(
-        original_notification_service
-    ), "禁用Mock模式后应该恢复原始通知服务实现"
+    assert type(restored_user_service) == type(original_user_service), (
+        "禁用Mock模式后应该恢复原始用户服务实现"
+    )
+    assert type(restored_notification_service) == type(original_notification_service), (
+        "禁用Mock模式后应该恢复原始通知服务实现"
+    )
 
     print("✅ Mock模式演示通过")
 
@@ -351,12 +351,12 @@ def demo_factory():
     # 通过Factory获取实例
     factory_repo = get_bean("factory_user_repo")
     assert factory_repo is not None, "应该能够通过Factory获取到用户存储"
-    assert isinstance(
-        factory_repo, UserRepository
-    ), "Factory创建的应该是UserRepository实例"
-    assert isinstance(
-        factory_repo, MySQLUserRepository
-    ), "Factory创建的应该是MySQLUserRepository实例"
+    assert isinstance(factory_repo, UserRepository), (
+        "Factory创建的应该是UserRepository实例"
+    )
+    assert isinstance(factory_repo, MySQLUserRepository), (
+        "Factory创建的应该是MySQLUserRepository实例"
+    )
 
     user = factory_repo.find_by_id(999)
     assert user is not None, "Factory创建的实例应该能够正常工作"
@@ -437,23 +437,23 @@ def demo_advanced_features():
 
     advanced_service = get_bean("advanced_user_service")
     assert advanced_service is not None, "应该能够获取到高级用户服务"
-    assert isinstance(
-        advanced_service, AdvancedUserService
-    ), "获取的应该是AdvancedUserService实例"
+    assert isinstance(advanced_service, AdvancedUserService), (
+        "获取的应该是AdvancedUserService实例"
+    )
 
     # 验证依赖注入
     assert advanced_service.primary_repo is not None, "主存储依赖应该被正确注入"
-    assert isinstance(
-        advanced_service.primary_repo, MySQLUserRepository
-    ), "作为接口没有primary的匹配，所以注入的是MySQLUserRepository，工厂的优先级高于其他"
+    assert isinstance(advanced_service.primary_repo, MySQLUserRepository), (
+        "作为接口没有primary的匹配，所以注入的是MySQLUserRepository，工厂的优先级高于其他"
+    )
     assert advanced_service.config is not None, "配置管理器依赖应该被正确注入"
-    assert isinstance(
-        advanced_service.config, ConfigManager
-    ), "应该注入ConfigManager实例"
+    assert isinstance(advanced_service.config, ConfigManager), (
+        "应该注入ConfigManager实例"
+    )
     assert advanced_service.notification is not None, "通知服务依赖应该被正确注入"
-    assert isinstance(
-        advanced_service.notification, PrimaryNotificationService
-    ), "应该注入Primary通知服务实现"
+    assert isinstance(advanced_service.notification, PrimaryNotificationService), (
+        "应该注入Primary通知服务实现"
+    )
 
     test_user_data = {"name": "张三", "email": "zhangsan@example.com"}
 

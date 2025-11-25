@@ -4,10 +4,11 @@ Elasticsearch 客户端工厂
 基于环境变量提供 Elasticsearch 客户端缓存和管理功能。
 """
 
-import os
 import asyncio
-from typing import Dict, Optional, List, Type, Any
+import os
 from hashlib import md5
+from typing import Any, Dict, List, Optional, Type
+
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.dsl.async_connections import connections as async_connections
 
@@ -138,8 +139,8 @@ class ElasticsearchClientWrapper:
                         doc_class.__name__,
                         (
                             doc_class._index._name
-                            if hasattr(doc_class, '_index')
-                            else 'unknown'
+                            if hasattr(doc_class, "_index")
+                            else "unknown"
                         ),
                     )
 
@@ -151,10 +152,10 @@ class ElasticsearchClientWrapper:
         """初始化单个文档类的索引"""
         try:
             # 获取别名名称
-            if hasattr(doc_class, '_index') and hasattr(doc_class._index, '_name'):
+            if hasattr(doc_class, "_index") and hasattr(doc_class._index, "_name"):
                 alias = doc_class._index._name
                 # 检查别名是否为空
-                if not alias or alias.strip() == '':
+                if not alias or alias.strip() == "":
                     logger.warning("文档类 %s 的索引名称为空", doc_class.__name__)
                     return
             else:
@@ -168,7 +169,7 @@ class ElasticsearchClientWrapper:
 
             if not alias_exists:
                 # 生成目标索引名
-                if hasattr(doc_class, 'dest'):
+                if hasattr(doc_class, "dest"):
                     dst = doc_class.dest()
                 else:
                     from common_utils.datetime_utils import get_now_with_timezone

@@ -6,10 +6,12 @@ PersonalSemanticMemory Repository
 
 from datetime import datetime
 from typing import List, Optional
-from motor.motor_asyncio import AsyncIOMotorClientSession
+
 from bson import ObjectId
-from core.observation.logger import get_logger
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
 from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.personal_semantic_memory import (
     PersonalSemanticMemory,
@@ -22,7 +24,7 @@ logger = get_logger(__name__)
 class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]):
     """
     个人语义记忆原始数据仓库
-    
+
     提供个人语义记忆的 CRUD 操作和基础查询功能。
     注意：向量应在提取时生成，此 Repository 不负责生成向量。
     """
@@ -39,11 +41,11 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> Optional[PersonalSemanticMemory]:
         """
         保存个人语义记忆
-        
+
         Args:
             semantic_memory: 个人语义记忆对象
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             保存的 PersonalSemanticMemory 或 None
         """
@@ -67,11 +69,11 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> Optional[PersonalSemanticMemory]:
         """
         根据ID获取个人语义记忆
-        
+
         Args:
             memory_id: 记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalSemanticMemory 或 None
         """
@@ -94,11 +96,11 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> List[PersonalSemanticMemory]:
         """
         根据父情景记忆ID获取所有语义记忆
-        
+
         Args:
             parent_episode_id: 父情景记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalSemanticMemory 列表
         """
@@ -125,24 +127,24 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> List[PersonalSemanticMemory]:
         """
         根据用户ID获取语义记忆列表
-        
+
         Args:
             user_id: 用户ID
             limit: 限制返回数量
             skip: 跳过数量
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalSemanticMemory 列表
         """
         try:
             query = self.model.find({"user_id": user_id}, session=session)
-            
+
             if skip:
                 query = query.skip(skip)
             if limit:
                 query = query.limit(limit)
-                
+
             results = await query.to_list()
             logger.debug(
                 "✅ 根据用户ID获取语义记忆成功: %s, 找到 %d 条记录",
@@ -161,11 +163,11 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> bool:
         """
         根据ID删除个人语义记忆
-        
+
         Args:
             memory_id: 记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             是否删除成功
         """
@@ -173,12 +175,12 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
             object_id = ObjectId(memory_id)
             result = await self.model.find({"_id": object_id}, session=session).delete()
             success = result.deleted_count > 0 if result else False
-            
+
             if success:
                 logger.info("✅ 删除个人语义记忆成功: %s", memory_id)
             else:
                 logger.warning("⚠️  未找到要删除的个人语义记忆: %s", memory_id)
-                
+
             return success
         except Exception as e:
             logger.error("❌ 删除个人语义记忆失败: %s", e)
@@ -191,11 +193,11 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
     ) -> int:
         """
         根据父情景记忆ID删除所有语义记忆
-        
+
         Args:
             parent_episode_id: 父情景记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             删除的记录数量
         """
@@ -217,4 +219,3 @@ class PersonalSemanticMemoryRawRepository(BaseRepository[PersonalSemanticMemory]
 
 # 导出
 __all__ = ["PersonalSemanticMemoryRawRepository"]
-

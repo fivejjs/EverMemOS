@@ -6,4 +6,3 @@
 from demo.ui.i18n_texts import I18nTexts
 
 __all__ = ["I18nTexts"]
-

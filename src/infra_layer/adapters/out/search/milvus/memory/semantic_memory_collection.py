@@ -6,17 +6,18 @@
 支持个人语义记忆和群组语义记忆。
 """
 
-from pymilvus import DataType, FieldSchema, CollectionSchema
+from pymilvus import CollectionSchema, DataType, FieldSchema
+
 from core.oxm.milvus.milvus_collection_base import (
-    MilvusCollectionWithSuffix,
     IndexConfig,
+    MilvusCollectionWithSuffix,
 )
 
 
 class SemanticMemoryCollection(MilvusCollectionWithSuffix):
     """
     语义记忆 Milvus Collection
-    
+
     同时支持个人语义记忆和群组语义记忆，通过 group_id 字段区分。
 
     使用方式：
@@ -135,11 +136,11 @@ class SemanticMemoryCollection(MilvusCollectionWithSuffix):
         ),
         # 标量字段索引（用于过滤）
         IndexConfig(
-            field_name="user_id", index_type="AUTOINDEX"  # 自动选择最适合的索引类型
+            field_name="user_id",
+            index_type="AUTOINDEX",  # 自动选择最适合的索引类型
         ),
         IndexConfig(field_name="group_id", index_type="AUTOINDEX"),
         IndexConfig(field_name="parent_episode_id", index_type="AUTOINDEX"),
         IndexConfig(field_name="start_time", index_type="AUTOINDEX"),
         IndexConfig(field_name="end_time", index_type="AUTOINDEX"),
     ]
-

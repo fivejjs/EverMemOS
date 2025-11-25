@@ -5,19 +5,20 @@ EpisodicMemory ES转换器
 """
 
 from typing import List
+
 import jieba
-from core.oxm.es.base_converter import BaseEsConverter
-from core.observation.logger import get_logger
 
 # EpisodicMemory类型不再需要导入，因为参数类型已经简化为Any
 from core.nlp.stopwords_utils import filter_stopwords
-from memory_layer.memory_extractor.episode_memory_extractor import EpisodeMemory
-from infra_layer.adapters.out.search.elasticsearch.memory.episodic_memory import (
-    EpisodicMemoryDoc,
-)
+from core.observation.logger import get_logger
+from core.oxm.es.base_converter import BaseEsConverter
 from infra_layer.adapters.out.persistence.document.memory.episodic_memory import (
     EpisodicMemory as MongoEpisodicMemory,
 )
+from infra_layer.adapters.out.search.elasticsearch.memory.episodic_memory import (
+    EpisodicMemoryDoc,
+)
+from memory_layer.memory_extractor.episode_memory_extractor import EpisodeMemory
 
 logger = get_logger(__name__)
 
@@ -63,36 +64,36 @@ class EpisodicMemoryConverter(BaseEsConverter[EpisodicMemoryDoc]):
                 # 基础标识字段
                 event_id=(
                     str(source_doc.id)
-                    if hasattr(source_doc, 'id') and source_doc.id
+                    if hasattr(source_doc, "id") and source_doc.id
                     else ""
                 ),
                 user_id=source_doc.user_id,
-                user_name=getattr(source_doc, 'user_name', None),
+                user_name=getattr(source_doc, "user_name", None),
                 # 时间字段
                 timestamp=source_doc.timestamp,
                 # 核心内容字段
                 title=getattr(
-                    source_doc, 'subject', None
+                    source_doc, "subject", None
                 ),  # MongoDB的subject映射到ES的title
                 episode=source_doc.episode,
                 search_content=search_content,  # BM25搜索的核心字段
-                summary=getattr(source_doc, 'summary', None),
+                summary=getattr(source_doc, "summary", None),
                 # 分类和标签字段
-                group_id=getattr(source_doc, 'group_id', None),
-                participants=getattr(source_doc, 'participants', None),
-                type=getattr(source_doc, 'type', None),
-                keywords=getattr(source_doc, 'keywords', None),
-                linked_entities=getattr(source_doc, 'linked_entities', None),
+                group_id=getattr(source_doc, "group_id", None),
+                participants=getattr(source_doc, "participants", None),
+                type=getattr(source_doc, "type", None),
+                keywords=getattr(source_doc, "keywords", None),
+                linked_entities=getattr(source_doc, "linked_entities", None),
                 # MongoDB特有字段
-                subject=getattr(source_doc, 'subject', None),
+                subject=getattr(source_doc, "subject", None),
                 memcell_event_id_list=getattr(
-                    source_doc, 'memcell_event_id_list', None
+                    source_doc, "memcell_event_id_list", None
                 ),
                 # 扩展字段
-                extend=getattr(source_doc, 'extend', None),
+                extend=getattr(source_doc, "extend", None),
                 # 审计字段
-                created_at=getattr(source_doc, 'created_at', None),
-                updated_at=getattr(source_doc, 'updated_at', None),
+                created_at=getattr(source_doc, "created_at", None),
+                updated_at=getattr(source_doc, "updated_at", None),
             )
 
             return es_doc
@@ -118,11 +119,11 @@ class EpisodicMemoryConverter(BaseEsConverter[EpisodicMemoryDoc]):
         text_content = []
 
         # 收集所有文本内容
-        if hasattr(source_doc, 'episode') and source_doc.episode:
+        if hasattr(source_doc, "episode") and source_doc.episode:
             text_content.append(source_doc.episode)
 
         # 将所有文本内容合并并使用jieba分词
-        combined_text = ' '.join(text_content)
+        combined_text = " ".join(text_content)
         search_content = list(jieba.cut(combined_text))
 
         # 过滤空字符串
@@ -175,7 +176,7 @@ class EpisodicMemoryConverter(BaseEsConverter[EpisodicMemoryDoc]):
 
             # 获取事件类型，如果是枚举则转换为字符串值
             event_type = getattr(episode_memory, "type", None)
-            if event_type is not None and hasattr(event_type, 'value'):
+            if event_type is not None and hasattr(event_type, "value"):
                 event_type = event_type.value
 
             # 创建ES文档实例
@@ -183,12 +184,12 @@ class EpisodicMemoryConverter(BaseEsConverter[EpisodicMemoryDoc]):
                 # 基础标识字段
                 event_id=getattr(episode_memory, "event_id", ""),
                 user_id=getattr(episode_memory, "user_id", ""),
-                user_name=getattr(episode_memory, 'user_name', None),
+                user_name=getattr(episode_memory, "user_name", None),
                 # 时间字段
                 timestamp=getattr(episode_memory, "timestamp", ""),
                 # 核心内容字段
                 title=getattr(
-                    episode_memory, 'subject', None
+                    episode_memory, "subject", None
                 ),  # Memory的subject映射到ES的title
                 episode=episode_text,
                 search_content=search_content,  # 使用jieba分词结果
@@ -207,12 +208,12 @@ class EpisodicMemoryConverter(BaseEsConverter[EpisodicMemoryDoc]):
                 # 扩展字段
                 extend=getattr(episode_memory, "extend", None),
                 # 审计字段 - Memory对象可能没有这些字段
-                created_at=getattr(episode_memory, 'created_at', None),
-                updated_at=getattr(episode_memory, 'updated_at', None),
+                created_at=getattr(episode_memory, "created_at", None),
+                updated_at=getattr(episode_memory, "updated_at", None),
             )
 
             # 设置ES文档ID
-            if hasattr(episode_memory, 'event_id') and episode_memory.event_id:
+            if hasattr(episode_memory, "event_id") and episode_memory.event_id:
                 es_doc.meta.id = episode_memory.event_id
 
             return es_doc

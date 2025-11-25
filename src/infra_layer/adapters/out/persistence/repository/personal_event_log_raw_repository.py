@@ -6,10 +6,12 @@ PersonalEventLog Repository
 
 from datetime import datetime
 from typing import List, Optional
-from motor.motor_asyncio import AsyncIOMotorClientSession
+
 from bson import ObjectId
-from core.observation.logger import get_logger
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
 from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.personal_event_log import (
     PersonalEventLog,
@@ -22,7 +24,7 @@ logger = get_logger(__name__)
 class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     """
     个人事件日志原始数据仓库
-    
+
     提供个人事件日志的 CRUD 操作和基础查询功能。
     注意：向量应在提取时生成，此 Repository 不负责生成向量。
     """
@@ -39,11 +41,11 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> Optional[PersonalEventLog]:
         """
         保存个人事件日志
-        
+
         Args:
             event_log: 个人事件日志对象
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             保存的 PersonalEventLog 或 None
         """
@@ -67,11 +69,11 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> Optional[PersonalEventLog]:
         """
         根据ID获取个人事件日志
-        
+
         Args:
             log_id: 日志ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalEventLog 或 None
         """
@@ -94,11 +96,11 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> List[PersonalEventLog]:
         """
         根据父情景记忆ID获取所有事件日志
-        
+
         Args:
             parent_episode_id: 父情景记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalEventLog 列表
         """
@@ -126,30 +128,30 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> List[PersonalEventLog]:
         """
         根据用户ID获取事件日志列表
-        
+
         Args:
             user_id: 用户ID
             limit: 限制返回数量
             skip: 跳过数量
             sort_desc: 是否按时间降序排序
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalEventLog 列表
         """
         try:
             query = self.model.find({"user_id": user_id}, session=session)
-            
+
             if sort_desc:
                 query = query.sort("-timestamp")
             else:
                 query = query.sort("timestamp")
-            
+
             if skip:
                 query = query.skip(skip)
             if limit:
                 query = query.limit(limit)
-                
+
             results = await query.to_list()
             logger.debug(
                 "✅ 根据用户ID获取事件日志成功: %s, 找到 %d 条记录",
@@ -173,7 +175,7 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> List[PersonalEventLog]:
         """
         根据时间范围查询事件日志
-        
+
         Args:
             start_time: 开始时间
             end_time: 结束时间
@@ -182,7 +184,7 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
             skip: 跳过数量
             sort_desc: 是否按时间降序排序，默认False（升序）
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             PersonalEventLog 列表
         """
@@ -190,19 +192,19 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
             filter_dict = {"timestamp": {"$gte": start_time, "$lt": end_time}}
             if user_id:
                 filter_dict["user_id"] = user_id
-                
+
             query = self.model.find(filter_dict, session=session)
-            
+
             if sort_desc:
                 query = query.sort("-timestamp")
             else:
                 query = query.sort("timestamp")
-                
+
             if skip:
                 query = query.skip(skip)
             if limit:
                 query = query.limit(limit)
-                
+
             results = await query.to_list()
             logger.debug(
                 "✅ 根据时间范围查询事件日志成功: 时间范围: %s - %s, 找到 %d 条记录",
@@ -222,11 +224,11 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> bool:
         """
         根据ID删除个人事件日志
-        
+
         Args:
             log_id: 日志ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             是否删除成功
         """
@@ -234,12 +236,12 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
             object_id = ObjectId(log_id)
             result = await self.model.find({"_id": object_id}, session=session).delete()
             success = result.deleted_count > 0 if result else False
-            
+
             if success:
                 logger.info("✅ 删除个人事件日志成功: %s", log_id)
             else:
                 logger.warning("⚠️  未找到要删除的个人事件日志: %s", log_id)
-                
+
             return success
         except Exception as e:
             logger.error("❌ 删除个人事件日志失败: %s", e)
@@ -252,11 +254,11 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
     ) -> int:
         """
         根据父情景记忆ID删除所有事件日志
-        
+
         Args:
             parent_episode_id: 父情景记忆ID
             session: 可选的 MongoDB 会话，用于事务支持
-            
+
         Returns:
             删除的记录数量
         """
@@ -278,4 +280,3 @@ class PersonalEventLogRawRepository(BaseRepository[PersonalEventLog]):
 
 # 导出
 __all__ = ["PersonalEventLogRawRepository"]
-

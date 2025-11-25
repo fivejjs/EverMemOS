@@ -4,10 +4,10 @@
 此模块包含各种装饰器，用于在方法执行前进行验证和处理。
 """
 
-from functools import wraps
-from typing import Any, Dict, Callable, Optional
 import logging
 import time
+from functools import wraps
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ def _format_args(args, kwargs) -> str:
 
     # 处理位置参数
     for i, arg in enumerate(args):
-        if hasattr(arg, '__dict__'):  # 对象类型
+        if hasattr(arg, "__dict__"):  # 对象类型
             args_str.append(f"arg{i}: {type(arg).__name__}")
         elif isinstance(arg, (list, dict)) and len(str(arg)) > 100:  # 大对象
             args_str.append(f"arg{i}: {type(arg).__name__}(len={len(arg)})")
@@ -157,7 +157,7 @@ def _format_args(args, kwargs) -> str:
 
     # 处理关键字参数
     for key, value in kwargs.items():
-        if hasattr(value, '__dict__'):  # 对象类型
+        if hasattr(value, "__dict__"):  # 对象类型
             args_str.append(f"{key}: {type(value).__name__}")
         elif isinstance(value, (list, dict)) and len(str(value)) > 100:  # 大对象
             args_str.append(f"{key}: {type(value).__name__}(len={len(value)})")
@@ -169,7 +169,7 @@ def _format_args(args, kwargs) -> str:
 
 def _format_result(result) -> str:
     """格式化函数返回值"""
-    if hasattr(result, '__dict__'):  # 对象类型
+    if hasattr(result, "__dict__"):  # 对象类型
         return f"{type(result).__name__}"
     elif isinstance(result, (list, dict)) and len(str(result)) > 100:  # 大对象
         return f"{type(result).__name__}(len={len(result)})"

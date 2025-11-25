@@ -5,18 +5,20 @@
 复用 EpisodicMemoryDoc，通过 type 字段过滤为 event_log。
 """
 
-from datetime import datetime
 import pprint
-from typing import List, Optional, Dict, Any
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from elasticsearch.dsl import Q
+
+from common_utils.datetime_utils import get_now_with_timezone
+from common_utils.text_utils import SmartTextParser
+from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.es.base_repository import BaseRepository
 from infra_layer.adapters.out.search.elasticsearch.memory.episodic_memory import (
     EpisodicMemoryDoc,
 )
-from core.observation.logger import get_logger
-from common_utils.datetime_utils import get_now_with_timezone
-from common_utils.text_utils import SmartTextParser
-from core.di.decorators import repository
 
 logger = get_logger(__name__)
 
@@ -31,7 +33,7 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
     - 多词查询和过滤功能
     - 文档创建和管理
     - 手动索引刷新控制
-    
+
     注意：复用 EpisodicMemoryDoc，通过 type 字段过滤为 event_log。
     """
 
@@ -120,27 +122,29 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
 
             # 构建 extend 字段，包含事件日志特有信息
             eventlog_extend = extend or {}
-            eventlog_extend.update({
-                "parent_episode_id": parent_episode_id,
-                "atomic_fact": atomic_fact,
-            })
+            eventlog_extend.update(
+                {
+                    "parent_episode_id": parent_episode_id,
+                    "atomic_fact": atomic_fact,
+                }
+            )
 
             # 创建文档实例（复用 EpisodicMemoryDoc）
             doc = EpisodicMemoryDoc(
                 event_id=log_id,
                 type="event_log",  # 标记类型
                 user_id=user_id,
-                user_name='',
+                user_name="",
                 timestamp=timestamp,
-                title='',
+                title="",
                 episode=atomic_fact,  # 将 atomic_fact 存储在 episode 字段
                 search_content=search_content,
-                summary='',
+                summary="",
                 group_id=group_id,
                 participants=participants or [],
                 keywords=[],
                 linked_entities=[],
-                subject='',
+                subject="",
                 memcell_event_id_list=[],
                 extend=eventlog_extend,
                 created_at=created_at,
@@ -200,10 +204,10 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
 
             # 构建过滤条件
             filter_queries = []
-            
+
             # ⚠️ 核心：只检索 type="event_log" 的文档
             filter_queries.append(Q("term", type="event_log"))
-            
+
             if user_id is not None:  # 使用 is not None 而不是 truthy 检查，支持空字符串
                 if user_id:  # 非空字符串：个人记忆
                     filter_queries.append(Q("term", user_id=user_id))
@@ -336,4 +340,3 @@ class EventLogEsRepository(BaseRepository[EpisodicMemoryDoc]):
                 e,
             )
             raise
-

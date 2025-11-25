@@ -8,12 +8,12 @@ import os
 
 # 添加当前目录到Python路径
 from common_utils.project_path import CURRENT_DIR
+from core.asynctasks.task_manager import TaskManager
 
 # 导入依赖注入相关模块
 from core.di.scanner import ComponentScanner
-from core.di.utils import get_beans, get_bean_by_type
+from core.di.utils import get_bean_by_type, get_beans
 from core.observation.logger import get_logger
-from core.asynctasks.task_manager import TaskManager
 
 # 推荐用法：模块顶部获取一次logger，后续直接使用（高性能）
 logger = get_logger(__name__)

@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import TIMESTAMP, Column, event
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Column, TIMESTAMP, event
+
 from common_utils.datetime_utils import get_now_with_timezone
 from core.context.context import get_current_user_info
 from core.observation.logger import get_logger
@@ -74,10 +75,8 @@ def get_auditable_model() -> SQLModel:
             return self.deleted_at is not None
 
     # 注册事件监听器
-    @event.listens_for(AuditableModel, 'before_insert', propagate=True)
-    def before_insert_listener(
-        mapper, connection, target
-    ):  # pylint: disable=unused-argument
+    @event.listens_for(AuditableModel, "before_insert", propagate=True)
+    def before_insert_listener(mapper, connection, target):  # pylint: disable=unused-argument
         """INSERT操作前的事件监听器"""
         # 忽略未使用的参数（SQLAlchemy事件监听器必须的签名）
         _ = mapper, connection
@@ -86,23 +85,21 @@ def get_auditable_model() -> SQLModel:
         current_user_id = _get_current_user_id()
 
         # 设置创建时间和创建者
-        if hasattr(target, 'created_at') and target.created_at is None:
+        if hasattr(target, "created_at") and target.created_at is None:
             target.created_at = current_time
 
-        if hasattr(target, 'created_by') and target.created_by is None:
+        if hasattr(target, "created_by") and target.created_by is None:
             target.created_by = current_user_id or "system"
 
         # 设置更新时间和更新者
-        if hasattr(target, 'updated_at') and target.updated_at is None:
+        if hasattr(target, "updated_at") and target.updated_at is None:
             target.updated_at = current_time
 
-        if hasattr(target, 'updated_by') and target.updated_by is None:
+        if hasattr(target, "updated_by") and target.updated_by is None:
             target.updated_by = current_user_id or "system"
 
-    @event.listens_for(AuditableModel, 'before_update', propagate=True)
-    def before_update_listener(
-        mapper, connection, target
-    ):  # pylint: disable=unused-argument
+    @event.listens_for(AuditableModel, "before_update", propagate=True)
+    def before_update_listener(mapper, connection, target):  # pylint: disable=unused-argument
         """UPDATE操作前的事件监听器"""
         # 忽略未使用的参数（SQLAlchemy事件监听器必须的签名）
         _ = mapper, connection
@@ -111,17 +108,17 @@ def get_auditable_model() -> SQLModel:
         current_user_id = _get_current_user_id()
 
         # 设置更新时间和更新者
-        if hasattr(target, 'updated_at'):
+        if hasattr(target, "updated_at"):
             target.updated_at = current_time
 
         # 只在updated_by为None时设置，不覆盖已有值（如"system"）
-        if hasattr(target, 'updated_by') and target.updated_by is None:
+        if hasattr(target, "updated_by") and target.updated_by is None:
             target.updated_by = current_user_id or "system"
 
         # 特殊处理软删除场景
-        if hasattr(target, 'deleted_at') and target.deleted_at is not None:
+        if hasattr(target, "deleted_at") and target.deleted_at is not None:
             # 如果设置了deleted_at，说明是软删除操作
-            if hasattr(target, 'deleted_by') and target.deleted_by is None:
+            if hasattr(target, "deleted_by") and target.deleted_by is None:
                 target.deleted_by = current_user_id or "system"
 
     return AuditableModel
@@ -136,8 +133,8 @@ def _get_current_user_id() -> Optional[str]:
     """
     try:
         user_info = get_current_user_info()
-        if user_info and 'user_id' in user_info:
-            return str(user_info['user_id'])
+        if user_info and "user_id" in user_info:
+            return str(user_info["user_id"])
     except Exception as e:  # pylint: disable=broad-except
         logger.debug("获取当前用户信息失败: %s", e)
     return None

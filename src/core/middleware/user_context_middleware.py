@@ -1,11 +1,12 @@
-from core.authorize.enums import Role
-from fastapi import Request, Response, HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
 from typing import Callable
 
-from core.context.context import set_current_user_info, clear_current_user_context
+from fastapi import HTTPException, Request, Response
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
+
 from component.auth_provider import AuthProvider
+from core.authorize.enums import Role
+from core.context.context import clear_current_user_context, set_current_user_info
 from core.di.utils import get_bean_by_type
 from core.observation.logger import get_logger
 

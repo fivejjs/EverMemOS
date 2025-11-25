@@ -1,7 +1,9 @@
-from typing import List, Optional, Dict, Any, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from motor.motor_asyncio import AsyncIOMotorClientSession
-from core.observation.logger import get_logger
+
 from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.core_memory import CoreMemory
 
@@ -125,7 +127,9 @@ class CoreMemoryRawRepository(BaseRepository[CoreMemory]):
             else:
                 # 如果指定了版本范围，获取所有匹配的版本
                 results = await self.model.find(
-                    query_filter, sort=[("version", -1)], session=session  # 按版本倒序
+                    query_filter,
+                    sort=[("version", -1)],
+                    session=session,  # 按版本倒序
                 ).to_list()
                 logger.debug(
                     "✅ 根据用户ID获取核心记忆版本成功: %s, version_range=%s, 找到 %d 条记录",
@@ -222,7 +226,7 @@ class CoreMemoryRawRepository(BaseRepository[CoreMemory]):
                 # 删除特定版本 - 直接删除并检查删除数量
                 result = await self.model.find(query_filter, session=session).delete()
                 deleted_count = (
-                    result.deleted_count if hasattr(result, 'deleted_count') else 0
+                    result.deleted_count if hasattr(result, "deleted_count") else 0
                 )
                 success = deleted_count > 0
 
@@ -244,7 +248,7 @@ class CoreMemoryRawRepository(BaseRepository[CoreMemory]):
                 # 删除所有版本
                 result = await self.model.find(query_filter, session=session).delete()
                 deleted_count = (
-                    result.deleted_count if hasattr(result, 'deleted_count') else 0
+                    result.deleted_count if hasattr(result, "deleted_count") else 0
                 )
                 success = deleted_count > 0
 

@@ -1,6 +1,8 @@
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
+
 from component.llm_adapter.llm.message import ChatMessage
 
 
@@ -53,6 +55,6 @@ class ChatCompletionResponse(BaseModel, extra="allow"):
     usage: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ChatCompletionResponse':
+    def from_dict(cls, data: Dict[str, Any]) -> "ChatCompletionResponse":
         """从字典创建响应对象"""
         return cls(**data)

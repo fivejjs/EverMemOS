@@ -5,11 +5,12 @@ ConversationMeta Raw Repository
 """
 
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from motor.motor_asyncio import AsyncIOMotorClientSession
 
-from core.oxm.mongo.base_repository import BaseRepository
 from core.di.decorators import repository
+from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.conversation_meta import (
     ConversationMeta,
 )
@@ -80,7 +81,11 @@ class ConversationMetaRawRepository(BaseRepository[ConversationMeta]):
                 query = query.limit(limit)
 
             result = await query.to_list()
-            logger.debug("✅ 根据场景获取对话元数据列表成功: scene=%s, count=%d", scene, len(result))
+            logger.debug(
+                "✅ 根据场景获取对话元数据列表成功: scene=%s, count=%d",
+                scene,
+                len(result),
+            )
             return result
         except Exception as e:
             logger.error("❌ 根据场景获取对话元数据列表失败: %s", e)
@@ -216,4 +221,3 @@ class ConversationMetaRawRepository(BaseRepository[ConversationMeta]):
         except Exception as e:
             logger.error("❌ 删除对话元数据失败: %s", e)
             return False
-

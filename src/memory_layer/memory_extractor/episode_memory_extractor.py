@@ -5,36 +5,39 @@ This module provides a simple base class for extracting memories
 from boundary detection results (BoundaryResult).
 """
 
+import asyncio
+import json
+import re
+import uuid
 from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-import re, json, asyncio, uuid
+from typing import Any, Dict, List, Optional
 
+from common_utils.datetime_utils import get_now_with_timezone
+from core.observation.logger import get_logger
+
+from ..llm.llm_provider import LLMProvider
 
 # 使用动态语言提示词导入（根据 MEMORY_LANGUAGE 环境变量自动选择）
 from ..prompts import (
+    DEFAULT_CUSTOM_INSTRUCTIONS,
     EPISODE_GENERATION_PROMPT,
     GROUP_EPISODE_GENERATION_PROMPT,
-    DEFAULT_CUSTOM_INSTRUCTIONS,
 )
 
 # 评估专用提示词
 from ..prompts.eval.episode_mem_prompts import (
-    EPISODE_GENERATION_PROMPT as EVAL_EPISODE_GENERATION_PROMPT,
-    GROUP_EPISODE_GENERATION_PROMPT as EVAL_GROUP_EPISODE_GENERATION_PROMPT,
     DEFAULT_CUSTOM_INSTRUCTIONS as EVAL_DEFAULT_CUSTOM_INSTRUCTIONS,
 )
-
-
-from ..llm.llm_provider import LLMProvider
-
+from ..prompts.eval.episode_mem_prompts import (
+    EPISODE_GENERATION_PROMPT as EVAL_EPISODE_GENERATION_PROMPT,
+)
+from ..prompts.eval.episode_mem_prompts import (
+    GROUP_EPISODE_GENERATION_PROMPT as EVAL_GROUP_EPISODE_GENERATION_PROMPT,
+)
+from ..types import MemCell, Memory, MemoryType, RawDataType
 from .base_memory_extractor import MemoryExtractor, MemoryExtractRequest
 from .semantic_memory_extractor import SemanticMemoryExtractor
-from ..types import MemoryType, Memory, RawDataType, MemCell
-
-from common_utils.datetime_utils import get_now_with_timezone
-
-from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -61,7 +64,9 @@ class EpisodeMemoryExtractRequest(MemoryExtractRequest):
 
 
 class EpisodeMemoryExtractor(MemoryExtractor):
-    def __init__(self, llm_provider: LLMProvider | None = None, use_eval_prompts: bool = False):
+    def __init__(
+        self, llm_provider: LLMProvider | None = None, use_eval_prompts: bool = False
+    ):
         super().__init__(MemoryType.EPISODE_SUMMARY)
         self.llm_provider = llm_provider
         self.semantic_extractor = SemanticMemoryExtractor(self.llm_provider)
@@ -91,7 +96,7 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                     return datetime.fromtimestamp(int(timestamp))
                 else:
                     # Try parsing as ISO format
-                    return datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    return datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 # Fallback to current time if parsing fails
                 logger.error(f"解析时间戳失败: {timestamp}")
@@ -114,18 +119,18 @@ class EpisodeMemoryExtractor(MemoryExtractor):
         lines = []
         for data in data_list:
             # Handle both RawData objects and dict objects
-            if hasattr(data, 'content'):
+            if hasattr(data, "content"):
                 # RawData object
-                speaker = data.content.get('speaker_name') or data.content.get(
-                    'sender', 'Unknown'
+                speaker = data.content.get("speaker_name") or data.content.get(
+                    "sender", "Unknown"
                 )
-                content = data.content['content']
-                timestamp = data.content['timestamp']
+                content = data.content["content"]
+                timestamp = data.content["timestamp"]
             else:
                 # Dict object
-                speaker = data.get('speaker_name') or data.get('sender', 'Unknown')
-                content = data['content']
-                timestamp = data['timestamp']
+                speaker = data.get("speaker_name") or data.get("sender", "Unknown")
+                content = data["content"]
+                timestamp = data["timestamp"]
 
             if timestamp:
                 lines.append(f"[{timestamp}] {speaker}: {content}")
@@ -137,18 +142,18 @@ class EpisodeMemoryExtractor(MemoryExtractor):
         lines = []
         for data in data_list:
             # Handle both RawData objects and dict objects
-            if hasattr(data, 'content'):
+            if hasattr(data, "content"):
                 # RawData object
-                speaker = data.content.get('speaker_name') or data.content.get(
-                    'sender', 'Unknown'
+                speaker = data.content.get("speaker_name") or data.content.get(
+                    "sender", "Unknown"
                 )
-                content = data.content['content']
-                timestamp = data.content['timestamp']
+                content = data.content["content"]
+                timestamp = data.content["timestamp"]
             else:
                 # Dict object
-                speaker = data.get('speaker_name') or data.get('sender', 'Unknown')
-                content = data['content']
-                timestamp = data['timestamp']
+                speaker = data.get("speaker_name") or data.get("sender", "Unknown")
+                content = data["content"]
+                timestamp = data["timestamp"]
 
             if timestamp:
                 lines.append(
@@ -172,12 +177,12 @@ class EpisodeMemoryExtractor(MemoryExtractor):
     def get_speaker_name_map(self, data_list: List[Dict[str, Any]]) -> Dict[str, str]:
         speaker_name_map = {}
         for data in data_list:
-            if hasattr(data, 'content'):
-                speaker_name_map[data.content.get('speaker_id')] = data.content.get(
-                    'speaker_name'
+            if hasattr(data, "content"):
+                speaker_name_map[data.content.get("speaker_id")] = data.content.get(
+                    "speaker_name"
                 )
             else:
-                speaker_name_map[data.get('speaker_id')] = data.get('speaker_name')
+                speaker_name_map[data.get("speaker_id")] = data.get("speaker_name")
         return speaker_name_map
 
     def _extract_participant_name_map(
@@ -185,13 +190,13 @@ class EpisodeMemoryExtractor(MemoryExtractor):
     ) -> List[str]:
         participant_name_map = {}
         for raw_data in chat_raw_data_list:
-            if 'speaker_name' in raw_data and raw_data['speaker_name']:
-                participant_name_map[raw_data['speaker_id']] = raw_data['speaker_name']
-            if 'referList' in raw_data and raw_data['referList']:
-                for refer_item in raw_data['referList']:
+            if "speaker_name" in raw_data and raw_data["speaker_name"]:
+                participant_name_map[raw_data["speaker_id"]] = raw_data["speaker_name"]
+            if "referList" in raw_data and raw_data["referList"]:
+                for refer_item in raw_data["referList"]:
                     if isinstance(refer_item, dict):
-                        if 'name' in refer_item and refer_item['_id']:
-                            participant_name_map[refer_item['_id']] = refer_item['name']
+                        if "name" in refer_item and refer_item["_id"]:
+                            participant_name_map[refer_item["_id"]] = refer_item["name"]
         return participant_name_map
 
     async def _trigger_semantic_extraction_async(
@@ -348,10 +353,10 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                     prompt = prompt_template.format(**format_params)
                     response = await self.llm_provider.generate(prompt)
                     # 首先尝试提取代码块中的JSON
-                    if '```json' in response:
+                    if "```json" in response:
                         # 提取代码块中的JSON内容
-                        start = response.find('```json') + 7
-                        end = response.find('```', start)
+                        start = response.find("```json") + 7
+                        end = response.find("```", start)
                         if end > start:
                             json_str = response[start:end].strip()
                             data = json.loads(json_str)
@@ -361,7 +366,9 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                     else:
                         # 尝试匹配包含title和content的JSON对象
                         json_match = re.search(
-                            r'\{[^{}]*"title"[^{}]*"content"[^{}]*\}', response, re.DOTALL
+                            r'\{[^{}]*"title"[^{}]*"content"[^{}]*\}',
+                            response,
+                            re.DOTALL,
                         )
                         if json_match:
                             data = json.loads(json_match.group())
@@ -370,7 +377,7 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                             data = json.loads(response)
                     break
                 except Exception as e:
-                    print('retry: ', i)
+                    print("retry: ", i)
                     if i == 4:
                         raise Exception("Episode memory extraction failed")
                     continue
@@ -442,10 +449,10 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                     response = await self.llm_provider.generate(prompt)
 
                     # 首先尝试提取代码块中的JSON
-                    if '```json' in response:
+                    if "```json" in response:
                         # 提取代码块中的JSON内容
-                        start = response.find('```json') + 7
-                        end = response.find('```', start)
+                        start = response.find("```json") + 7
+                        end = response.find("```", start)
                         if end > start:
                             json_str = response[start:end].strip()
                             data = json.loads(json_str)
@@ -492,7 +499,7 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                         episode=content,
                         group_id=request.group_id,
                         participants=participants,
-                        type=getattr(first_memcell, 'type', None),
+                        type=getattr(first_memcell, "type", None),
                         memcell_event_id_list=[
                             memcell.event_id for memcell in request.memcell_list
                         ],
@@ -536,7 +543,7 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                         ),
                         group_id=request.group_id,
                         participants=participants,
-                        type=getattr(first_memcell, 'type', None),
+                        type=getattr(first_memcell, "type", None),
                         memcell_event_id_list=[
                             memcell.event_id for memcell in request.memcell_list
                         ],

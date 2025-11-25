@@ -43,7 +43,7 @@ def encode_base62(num: int) -> str:
         num //= BASE
 
     # 反转结果，因为我们是从低位到高位构建的
-    return ''.join(reversed(result))
+    return "".join(reversed(result))
 
 
 def decode_base62(encoded: str) -> int:

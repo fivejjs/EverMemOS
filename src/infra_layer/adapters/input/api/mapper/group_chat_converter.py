@@ -26,14 +26,15 @@
         # 使用 memorize_input 调用记忆存储服务
 """
 
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
+
 from common_utils.datetime_utils import from_iso_format
 
 
 def convert_group_chat_format_to_memorize_input(
-    group_chat_data: Dict[str, Any]
+    group_chat_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     将 GroupChatFormat 格式转换为 memorize 接口输入格式
@@ -237,7 +238,7 @@ def _parse_datetime_with_timezone(
 
 
 def convert_simple_message_to_memorize_input(
-    message_data: Dict[str, Any]
+    message_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     将简单直接的单条消息格式转换为 memorize 接口输入格式

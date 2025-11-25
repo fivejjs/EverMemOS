@@ -7,4 +7,3 @@ from .extractor import MemoryExtractor
 from .validator import ResultValidator
 
 __all__ = ["MemoryExtractor", "ResultValidator"]
-

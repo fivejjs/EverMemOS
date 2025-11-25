@@ -20,11 +20,24 @@ LEVEL_PRIORITY = {
     # Empty/missing
     "": 0,
     # Low level
-    "低级": 1, "low": 1, "basic": 1, "beginner": 1, "初级": 1, "familiar": 1, "weak": 1,
+    "低级": 1,
+    "low": 1,
+    "basic": 1,
+    "beginner": 1,
+    "初级": 1,
+    "familiar": 1,
+    "weak": 1,
     # Medium level
-    "中级": 2, "medium": 2, "intermediate": 2,
+    "中级": 2,
+    "medium": 2,
+    "intermediate": 2,
     # High level
-    "高级": 3, "high": 3, "advanced": 3, "strong": 3, "专家": 3, "expert": 3,
+    "高级": 3,
+    "high": 3,
+    "advanced": 3,
+    "strong": 3,
+    "专家": 3,
+    "expert": 3,
 }
 
 
@@ -172,7 +185,9 @@ def merge_value_with_evidences_lists(
             level_str = (
                 level_value.strip()
                 if isinstance(level_value, str)
-                else str(level_value).strip() if level_value is not None else ""
+                else str(level_value).strip()
+                if level_value is not None
+                else ""
             )
             if level_str:
                 merged_map[value_key]["level"] = level_str
@@ -233,7 +248,9 @@ def extract_values_with_evidence(
         level_str = (
             level.strip()
             if isinstance(level, str)
-            else str(level).strip() if level is not None and level != "" else ""
+            else str(level).strip()
+            if level is not None and level != ""
+            else ""
         )
 
         if value_str not in seen_values:
@@ -254,7 +271,11 @@ def extract_values_with_evidence(
 
     if isinstance(raw_value, dict):
         if "value" in raw_value:
-            add_entry(raw_value.get("value"), raw_value.get("evidences"), raw_value.get("level"))
+            add_entry(
+                raw_value.get("value"),
+                raw_value.get("evidences"),
+                raw_value.get("level"),
+            )
         else:
             for key, evidence_list in raw_value.items():
                 if key == "evidences":
@@ -270,14 +291,18 @@ def extract_values_with_evidence(
                         entry.get("level"),
                     )
                 else:
-                    evidence_source = entry.get("evidences") if "evidences" in entry else None
+                    evidence_source = (
+                        entry.get("evidences") if "evidences" in entry else None
+                    )
                     processed = False
                     for key, evidence_list in entry.items():
                         if key == "evidences":
                             continue
                         add_entry(
                             key,
-                            evidence_list if evidence_source is None else evidence_source,
+                            evidence_list
+                            if evidence_source is None
+                            else evidence_source,
                             entry.get("level"),
                         )
                         processed = True

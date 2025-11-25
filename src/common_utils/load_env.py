@@ -8,9 +8,10 @@
 import logging
 import os
 import sys
-from typing import Optional
-from dotenv import load_dotenv
 import time
+from typing import Optional
+
+from dotenv import load_dotenv
 
 from common_utils.app_meta import set_service_name
 from common_utils.project_path import PROJECT_DIR
@@ -75,7 +76,7 @@ def reset_timezone():
     timezone = os.environ.get("TZ") or "Asia/Shanghai"
     os.environ["TZ"] = timezone
     # tzset() is not available on Windows, only call it if available
-    if hasattr(time, 'tzset'):
+    if hasattr(time, "tzset"):
         time.tzset()
 
 
@@ -88,8 +89,8 @@ def sync_pythonpath_with_syspath():
     2. 排除 .venv 和类似的虚拟环境路径
     3. 保持原有 PYTHONPATH 的优先级
     """
-    import sys
     import os
+    import sys
     from pathlib import Path
 
     # 获取当前 PYTHONPATH

@@ -5,12 +5,12 @@ This module provides a simple base class for extracting memories
 from boundary detection results (BoundaryResult).
 """
 
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
-import uuid
 
-from ..types import MemoryType, Memory, MemCell
+from ..types import MemCell, Memory, MemoryType
 
 
 @dataclass

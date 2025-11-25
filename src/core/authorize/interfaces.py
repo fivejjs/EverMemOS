@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict
+from typing import Any, Dict, Optional
+
 from .enums import Role
 
 

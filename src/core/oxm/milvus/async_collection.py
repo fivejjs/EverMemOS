@@ -1,13 +1,13 @@
 import asyncio
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union, List, Dict
+from typing import Any, Callable, Dict, List, Optional, TypeVar, Union
 
 from pymilvus import Collection, SearchResult
-from pymilvus.orm.mutation import MutationResult
 from pymilvus.client.abstract import BaseRanker
 from pymilvus.client.types import CompactionPlans, CompactionState, Replica
+from pymilvus.orm.mutation import MutationResult
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def async_wrap(func: Callable[..., T]) -> Callable[..., asyncio.Future[T]]:

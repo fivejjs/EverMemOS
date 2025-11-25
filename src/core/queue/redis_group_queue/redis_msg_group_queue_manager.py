@@ -12,33 +12,33 @@ Redis消息分组队列管理器
 """
 
 import asyncio
-import time
-import random
 import hashlib
-from typing import Any, Dict, List, Optional, Tuple, Callable, Type
+import random
+import time
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import redis.asyncio as redis
 
-from core.observation.logger import get_logger
 from common_utils.datetime_utils import get_now_with_timezone, to_iso_format
-from core.queue.redis_group_queue.redis_group_queue_item import SimpleQueueItem
+from core.observation.logger import get_logger
 from core.queue.redis_group_queue.redis_group_queue_item import (
     RedisGroupQueueItem,
     SerializationMode,
+    SimpleQueueItem,
 )
 from core.queue.redis_group_queue.redis_group_queue_lua_scripts import (
-    ENQUEUE_SCRIPT,
-    GET_QUEUE_STATS_SCRIPT,
-    GET_ALL_PARTITIONS_STATS_SCRIPT,
-    REBALANCE_PARTITIONS_SCRIPT,
-    JOIN_CONSUMER_SCRIPT,
-    EXIT_CONSUMER_SCRIPT,
-    KEEPALIVE_CONSUMER_SCRIPT,
     CLEANUP_INACTIVE_OWNERS_SCRIPT,
+    ENQUEUE_SCRIPT,
+    EXIT_CONSUMER_SCRIPT,
     FORCE_CLEANUP_SCRIPT,
+    GET_ALL_PARTITIONS_STATS_SCRIPT,
     GET_MESSAGES_SCRIPT,
+    GET_QUEUE_STATS_SCRIPT,
+    JOIN_CONSUMER_SCRIPT,
+    KEEPALIVE_CONSUMER_SCRIPT,
+    REBALANCE_PARTITIONS_SCRIPT,
 )
 from core.rate_limit.rate_limiter import rate_limit
 
@@ -295,7 +295,7 @@ class RedisGroupQueueManager:
             str: 分区名称（001-100）
         """
         # 使用MD5 hash确保分布均匀
-        hash_value = hashlib.md5(group_key.encode('utf-8')).hexdigest()
+        hash_value = hashlib.md5(group_key.encode("utf-8")).hexdigest()
         # 取前8位转为整数，再取模
         partition_index = int(hash_value[:8], 16) % self.FIXED_PARTITION_COUNT
         return self.partition_names[partition_index]
@@ -399,7 +399,7 @@ class RedisGroupQueueManager:
             str: 解码后的字符串
         """
         if isinstance(value, bytes):
-            return value.decode('utf-8')
+            return value.decode("utf-8")
         elif isinstance(value, str):
             return value
         else:
@@ -1227,7 +1227,7 @@ class RedisGroupQueueManager:
                 partitions = []
                 non_empty_partitions = 0
                 max_partition_size = 0
-                min_partition_size = float('inf')
+                min_partition_size = float("inf")
 
                 for i in range(0, len(partition_stats_raw), 4):
                     if i + 3 < len(partition_stats_raw):
@@ -1254,7 +1254,7 @@ class RedisGroupQueueManager:
                     max_partition_size if max_partition_size != 0 else 0
                 )
                 stats["min_partition_size"] = (
-                    min_partition_size if min_partition_size != float('inf') else 0
+                    min_partition_size if min_partition_size != float("inf") else 0
                 )
 
             return stats

@@ -13,7 +13,11 @@ from core.observation.logger import get_logger
 # 使用动态语言提示词导入（根据 MEMORY_LANGUAGE 环境变量自动选择）
 from ...prompts import CONVERSATION_PROFILE_EVIDENCE_COMPLETION_PROMPT
 from ...types import MemCell
-from .types import GroupImportanceEvidence, ImportanceEvidence, ProfileMemoryExtractRequest
+from .types import (
+    GroupImportanceEvidence,
+    ImportanceEvidence,
+    ProfileMemoryExtractRequest,
+)
 
 logger = get_logger(__name__)
 
@@ -157,7 +161,9 @@ def build_conversation_text(
         if not speaker_name and speaker_id:
             speaker_name = user_id_to_name.get(str(speaker_id), "")
 
-        speaker = f"{speaker_name}(user_id:{speaker_id})" if speaker_id else speaker_name
+        speaker = (
+            f"{speaker_name}(user_id:{speaker_id})" if speaker_id else speaker_name
+        )
         content = append_refer_user_ids(
             data.get("content"),
             data.get("referList"),
@@ -212,7 +218,10 @@ def build_episode_text(
 
     # Format with timestamp and event_id
     timestamp = getattr(memcell, "timestamp", None)
-    return f"[{timestamp}][episode_id:{event_id_str}] {annotated_content}", event_id_str or None
+    return (
+        f"[{timestamp}][episode_id:{event_id_str}] {annotated_content}",
+        event_id_str or None,
+    )
 
 
 def annotate_relative_dates(text: str, base_date: Optional[str] = None) -> str:
@@ -283,7 +292,9 @@ def annotate_relative_dates(text: str, base_date: Optional[str] = None) -> str:
         r"\b(today|tomorrow|yesterday|this week|last week|next week|this month|last month|next month)\b",
         re.IGNORECASE,
     )
-    chinese_pattern = re.compile("(今天|明天|昨天|本周|这周|上周|下周|本月|这个月|上个月|下个月)")
+    chinese_pattern = re.compile(
+        "(今天|明天|昨天|本周|这周|上周|下周|本月|这个月|上个月|下个月)"
+    )
 
     def english_repl(match: re.Match[str]) -> str:
         original = match.group(0)
@@ -311,7 +322,9 @@ def annotate_relative_dates(text: str, base_date: Optional[str] = None) -> str:
     return updated_text
 
 
-def extract_group_important_info(memcells: Iterable[MemCell], group_id: str) -> Dict[str, Any]:
+def extract_group_important_info(
+    memcells: Iterable[MemCell], group_id: str
+) -> Dict[str, Any]:
     """Aggregate statistics used to determine user importance within a group."""
     group_data = {
         "group_id": group_id,
@@ -433,12 +446,10 @@ def build_evidence_completion_prompt(
     profiles_without_evidences: List[Dict[str, Any]],
 ) -> str:
     """Construct the evidence completion prompt for a batch of user profiles."""
-    return (
-        CONVERSATION_PROFILE_EVIDENCE_COMPLETION_PROMPT.replace(
-            "{conversation}",
-            conversation_text,
-        ).replace(
-            "{user_profiles_without_evidences}",
-            json.dumps(profiles_without_evidences, ensure_ascii=False),
-        )
+    return CONVERSATION_PROFILE_EVIDENCE_COMPLETION_PROMPT.replace(
+        "{conversation}",
+        conversation_text,
+    ).replace(
+        "{user_profiles_without_evidences}",
+        json.dumps(profiles_without_evidences, ensure_ascii=False),
     )

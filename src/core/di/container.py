@@ -9,35 +9,35 @@
 - 全局容器创建：使用 _container_lock 保证单例
 """
 
-import inspect
 import abc
+import inspect
+from enum import Enum
+from threading import RLock
 from typing import (
+    Any,
+    Callable,
     Dict,
+    List,
+    Optional,
+    Set,
     Type,
     TypeVar,
-    Optional,
-    Any,
-    List,
-    Set,
-    Callable,
     Union,
-    get_origin,
     get_args,
+    get_origin,
 )
-from threading import RLock
-from enum import Enum
 
 from core.di.exceptions import (
-    CircularDependencyError,
     BeanNotFoundError,
+    CircularDependencyError,
+    DependencyResolutionError,
     DuplicateBeanError,
     FactoryError,
-    DependencyResolutionError,
     MockNotEnabledError,
     PrimaryBeanConflictError,
 )
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class BeanScope(Enum):
@@ -126,7 +126,7 @@ class DIContainer:
         is_primary: bool = False,
         is_mock: bool = False,
         instance: T = None,
-    ) -> 'DIContainer':
+    ) -> "DIContainer":
         """注册Bean"""
         with self._lock:
             bean_def = BeanDefinition(
@@ -181,7 +181,7 @@ class DIContainer:
         bean_name: str = None,
         is_primary: bool = False,
         is_mock: bool = False,
-    ) -> 'DIContainer':
+    ) -> "DIContainer":
         """注册Factory方法"""
         with self._lock:
             bean_def = BeanDefinition(
@@ -433,11 +433,11 @@ class DIContainer:
             if self._is_bean_available(bean_def):
                 beans_info.append(
                     {
-                        'name': name,
-                        'type_name': bean_def.bean_type.__name__,
-                        'scope': bean_def.scope.value,
-                        'is_primary': bean_def.is_primary,
-                        'is_mock': bean_def.is_mock,
+                        "name": name,
+                        "type_name": bean_def.bean_type.__name__,
+                        "scope": bean_def.scope.value,
+                        "is_primary": bean_def.is_primary,
+                        "is_mock": bean_def.is_mock,
                     }
                 )
 
@@ -478,7 +478,7 @@ class DIContainer:
                     if (
                         base != abc.ABC
                         and base != object
-                        and hasattr(base, '__abstractmethods__')
+                        and hasattr(base, "__abstractmethods__")
                     ):  # ABC类型
                         all_parent_types.add(base)
             except (AttributeError, TypeError):
@@ -566,7 +566,7 @@ class DIContainer:
         # 准备构造函数参数
         init_params = {}
         for param_name, param in signature.parameters.items():
-            if param_name == 'self':
+            if param_name == "self":
                 continue
 
             # 尝试根据类型注入依赖
@@ -602,7 +602,7 @@ class DIContainer:
         try:
             signature = inspect.signature(bean_def.bean_type.__init__)
             for param_name, param in signature.parameters.items():
-                if param_name == 'self':
+                if param_name == "self":
                     continue
                 if param.annotation != inspect.Parameter.empty:
                     bean_def.dependencies.add(param.annotation)

@@ -4,18 +4,18 @@
 """
 
 import asyncio
-from typing import Callable, Optional
 from contextvars import Token
+from typing import Callable, Optional
 
 from fastapi import Request
-from starlette.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from starlette.types import ASGIApp
 
-from core.observation.logger import get_logger
+from component.app_info_provider import AppInfoProvider
 from core.context.context import clear_current_app_info, set_current_app_info
 from core.di.utils import get_bean_by_type
-from component.app_info_provider import AppInfoProvider
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 

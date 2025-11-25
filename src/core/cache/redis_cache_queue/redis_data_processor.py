@@ -10,7 +10,8 @@ Redis 数据处理器
 import json
 import pickle
 import uuid
-from typing import Any, Union, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
+
 from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
@@ -92,7 +93,7 @@ class RedisDataProcessor:
             else:
                 # 尝试解码为字符串进行 JSON 反序列化
                 try:
-                    data_str = data.decode('utf-8')
+                    data_str = data.decode("utf-8")
                     return json.loads(data_str)
                 except UnicodeDecodeError:
                     logger.warning("二进制数据无法解码为UTF-8")
@@ -130,7 +131,7 @@ class RedisDataProcessor:
 
         if isinstance(data, bytes):
             # 对于二进制数据，使用二进制分隔符
-            unique_id_bytes = unique_id.encode('utf-8')
+            unique_id_bytes = unique_id.encode("utf-8")
             separator = b":"
             return unique_id_bytes + separator + data
         else:
@@ -154,7 +155,7 @@ class RedisDataProcessor:
             if separator in member:
                 unique_id_bytes, data = member.split(separator, 1)
                 try:
-                    unique_id = unique_id_bytes.decode('utf-8')
+                    unique_id = unique_id_bytes.decode("utf-8")
                 except UnicodeDecodeError:
                     unique_id = "unknown"
             else:
@@ -163,8 +164,8 @@ class RedisDataProcessor:
                 data = member
         else:
             # 处理字符串数据（来自 decode_responses=True 的客户端）
-            if ':' in member:
-                unique_id, data = member.split(':', 1)
+            if ":" in member:
+                unique_id, data = member.split(":", 1)
             else:
                 # 兼容旧格式
                 unique_id = "unknown"
@@ -174,7 +175,7 @@ class RedisDataProcessor:
 
     @staticmethod
     def process_data_for_storage(
-        data: Union[str, Dict, List, Any]
+        data: Union[str, Dict, List, Any],
     ) -> Union[str, bytes]:
         """
         处理数据以供存储

@@ -20,7 +20,6 @@ import traceback
 
 from core.observation.logger import get_logger
 
-
 logger = get_logger(__name__)
 
 

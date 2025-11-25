@@ -5,16 +5,15 @@
 """
 
 import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from core.observation.logger import get_logger
-
-from core.middleware.global_exception_handler import global_exception_handler
-from core.di.utils import get_bean_by_type
 from component.database_connection_provider import DatabaseConnectionProvider
-
+from core.di.utils import get_bean_by_type
 from core.lifespan.lifespan_factory import LifespanFactory
+from core.middleware.global_exception_handler import global_exception_handler
+from core.observation.logger import get_logger
 
 # 推荐用法：模块顶部获取一次logger，后续直接使用（高性能）
 logger = get_logger(__name__)
@@ -49,8 +48,8 @@ def create_base_app(
 
     # 根据环境变量控制docs的显示
     # 只有在开发环境(ENV=dev)时才启用docs
-    env = os.environ.get('ENV', 'prod').upper()
-    enable_docs = env == 'DEV'
+    env = os.environ.get("ENV", "prod").upper()
+    enable_docs = env == "DEV"
 
     # 创建FastAPI应用
     app = FastAPI(

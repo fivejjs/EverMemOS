@@ -8,12 +8,12 @@
 import asyncio
 from typing import List
 
+from biz_layer.personal_memory_sync import PersonalMemorySyncService
 from core.di import get_bean_by_type
 from core.observation.logger import get_logger
 from infra_layer.adapters.out.persistence.document.memory.personal_semantic_memory import (
     PersonalSemanticMemory,
 )
-from biz_layer.personal_memory_sync import PersonalMemorySyncService
 
 logger = get_logger(__name__)
 
@@ -21,7 +21,9 @@ logger = get_logger(__name__)
 async def main():
     service = get_bean_by_type(PersonalMemorySyncService)
 
-    docs: List[PersonalSemanticMemory] = await PersonalSemanticMemory.find_all().to_list()
+    docs: List[
+        PersonalSemanticMemory
+    ] = await PersonalSemanticMemory.find_all().to_list()
     if not docs:
         logger.info("MongoDB 中没有 personal_semantic_memories 记录，跳过")
         return
@@ -37,4 +39,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

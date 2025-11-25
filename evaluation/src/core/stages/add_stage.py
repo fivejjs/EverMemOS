@@ -3,12 +3,13 @@ Add 阶段
 
 负责摄入对话数据并构建索引。
 """
-from pathlib import Path
-from typing import List, Any, Optional
-from logging import Logger
 
-from evaluation.src.core.data_models import Conversation, Dataset
+from logging import Logger
+from pathlib import Path
+from typing import Any, List, Optional
+
 from evaluation.src.adapters.base import BaseAdapter
+from evaluation.src.core.data_models import Conversation, Dataset
 from evaluation.src.utils.checkpoint import CheckpointManager
 
 
@@ -23,7 +24,7 @@ async def run_add_stage(
 ) -> dict:
     """
     执行 Add 阶段
-    
+
     Args:
         adapter: 系统适配器
         dataset: 标准格式数据集
@@ -32,7 +33,7 @@ async def run_add_stage(
         logger: 日志器
         console: 控制台对象
         completed_stages: 已完成的阶段集合
-        
+
     Returns:
         包含 index 的字典
     """
@@ -40,16 +41,15 @@ async def run_add_stage(
     index = await adapter.add(
         conversations=dataset.conversations,
         output_dir=output_dir,
-        checkpoint_manager=checkpoint_manager
+        checkpoint_manager=checkpoint_manager,
     )
-    
+
     # 索引元数据（延迟加载，无需持久化）
     logger.info("✅ Stage 1 completed")
-    
+
     # 保存 checkpoint
     completed_stages.add("add")
     if checkpoint_manager:
         checkpoint_manager.save_checkpoint(completed_stages)
-    
-    return {"index": index}
 
+    return {"index": index}

@@ -2,13 +2,15 @@
 数据库生命周期提供者实现
 """
 
-from fastapi import FastAPI
-from typing import Tuple, Any
+from typing import Any, Tuple
 
-from core.observation.logger import get_logger
-from core.di.utils import get_bean_by_type
-from core.di.decorators import component
+from fastapi import FastAPI
+
 from component.database_connection_provider import DatabaseConnectionProvider
+from core.di.decorators import component
+from core.di.utils import get_bean_by_type
+from core.observation.logger import get_logger
+
 from .lifespan_interface import LifespanProvider
 
 logger = get_logger(__name__)
@@ -46,9 +48,10 @@ class DatabaseLifespanProvider(LifespanProvider):
             self._db_provider = get_bean_by_type(DatabaseConnectionProvider)
 
             # 获取连接池和检查点保存器
-            pool, checkpointer = (
-                await self._db_provider.get_connection_and_checkpointer()
-            )
+            (
+                pool,
+                checkpointer,
+            ) = await self._db_provider.get_connection_and_checkpointer()
 
             # 将连接池和checkpointer存储到app.state中，供业务逻辑使用
             app.state.connection_pool = pool
@@ -81,6 +84,6 @@ class DatabaseLifespanProvider(LifespanProvider):
                 logger.error("关闭数据库连接时出错: %s", str(e))
 
         # 清理app.state中的数据库相关属性
-        for attr in ['connection_pool', 'checkpointer', 'db_provider']:
+        for attr in ["connection_pool", "checkpointer", "db_provider"]:
             if hasattr(app.state, attr):
                 delattr(app.state, attr)

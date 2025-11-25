@@ -32,8 +32,8 @@ async def enable_timestamp_sharding(session=None):
 
         # 1. 检查是否为分片集群
         try:
-            shard_status = await admin_db.command('listShards')
-            if not shard_status.get('shards'):
+            shard_status = await admin_db.command("listShards")
+            if not shard_status.get("shards"):
                 logger.warning("⚠️  当前不是分片集群环境，跳过分片配置")
                 return
             logger.info(f"✅ 检测到分片集群，共 {len(shard_status['shards'])} 个分片")
@@ -43,7 +43,7 @@ async def enable_timestamp_sharding(session=None):
 
         # 2. 启用数据库分片
         try:
-            await admin_db.command('enableSharding', db.name)
+            await admin_db.command("enableSharding", db.name)
             logger.info(f"✅ 数据库 '{db.name}' 分片已启用")
         except OperationFailure as e:
             if "already enabled" in str(e).lower():
@@ -56,7 +56,7 @@ async def enable_timestamp_sharding(session=None):
         collection_name = f"{db.name}.memcells"
         try:
             await admin_db.command(
-                'shardCollection', collection_name, key={"timestamp": 1}
+                "shardCollection", collection_name, key={"timestamp": 1}
             )
             logger.info("✅ MemCell集合timestamp分片键设置完成")
         except OperationFailure as e:
@@ -83,7 +83,7 @@ async def enable_timestamp_sharding(session=None):
             # 执行预分片
             for point in split_points:
                 try:
-                    await admin_db.command('split', collection_name, middle=point)
+                    await admin_db.command("split", collection_name, middle=point)
                     logger.debug(f"📅 创建分片点: {point['timestamp']}")
                 except OperationFailure as e:
                     if "already exists" not in str(e).lower():
@@ -96,9 +96,9 @@ async def enable_timestamp_sharding(session=None):
 
         # 5. 验证分片配置
         try:
-            shard_info = await db.command('collStats', 'memcells')
+            shard_info = await db.command("collStats", "memcells")
 
-            if shard_info.get('sharded'):
+            if shard_info.get("sharded"):
                 logger.info("✅ MemCell集合分片配置验证成功")
                 logger.info(f"📊 分片键: {shard_info.get('shardKey', {})}")
             else:

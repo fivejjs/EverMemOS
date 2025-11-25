@@ -7,14 +7,14 @@ import asyncio
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from core.longjob.interfaces import (
-    LongJobInterface,
-    LongJobStatus,
     ConsumerConfig,
     ErrorHandler,
+    LongJobInterface,
+    LongJobStatus,
     MessageBatch,
 )
 
@@ -74,11 +74,11 @@ class RecycleConsumerBase(LongJobInterface, ABC):
 
         # 统计信息
         self.stats = {
-            'total_processed': 0,
-            'total_errors': 0,
-            'total_timeouts': 0,
-            'start_time': None,
-            'last_processed_time': None,
+            "total_processed": 0,
+            "total_errors": 0,
+            "total_timeouts": 0,
+            "start_time": None,
+            "last_processed_time": None,
         }
 
     async def start(self) -> None:
@@ -99,7 +99,7 @@ class RecycleConsumerBase(LongJobInterface, ABC):
             # 启动消费循环
             self._task = asyncio.create_task(self._consume_loop())
             self.status = LongJobStatus.RUNNING
-            self.stats['start_time'] = datetime.now()
+            self.stats["start_time"] = datetime.now()
 
             self.logger.info("Consumer %s started successfully", self.job_id)
 
@@ -195,12 +195,12 @@ class RecycleConsumerBase(LongJobInterface, ABC):
             except Exception as e:
                 # 错误处理
                 context = {
-                    'job_id': self.job_id,
-                    'timestamp': datetime.now().isoformat(),
-                    'stats': self.stats.copy(),
+                    "job_id": self.job_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "stats": self.stats.copy(),
                 }
 
-                self.stats['total_errors'] += 1
+                self.stats["total_errors"] += 1
 
                 try:
                     should_continue = await self._error_handler.handle_error(e, context)
@@ -233,11 +233,11 @@ class RecycleConsumerBase(LongJobInterface, ABC):
             # 使用超时控制单个消息的处理时间
             await asyncio.wait_for(self._process_single_message(), timeout=timeout)
 
-            self.stats['total_processed'] += 1
-            self.stats['last_processed_time'] = datetime.now()
+            self.stats["total_processed"] += 1
+            self.stats["last_processed_time"] = datetime.now()
 
         except asyncio.TimeoutError:
-            self.stats['total_timeouts'] += 1
+            self.stats["total_timeouts"] += 1
             self.logger.warning(
                 "Message processing timeout in consumer %s (timeout: %ss)",
                 self.job_id,
@@ -246,10 +246,10 @@ class RecycleConsumerBase(LongJobInterface, ABC):
             # 超时也算作错误，交给错误处理器处理
             timeout_error = TimeoutError(f"Message processing timeout ({timeout}s)")
             context = {
-                'job_id': self.job_id,
-                'error_type': 'timeout',
-                'timeout': timeout,
-                'timestamp': datetime.now().isoformat(),
+                "job_id": self.job_id,
+                "error_type": "timeout",
+                "timeout": timeout,
+                "timestamp": datetime.now().isoformat(),
             }
 
             try:
@@ -293,7 +293,7 @@ class RecycleConsumerBase(LongJobInterface, ABC):
                         message_batch = MessageBatch(
                             data=raw_message,
                             batch_id=f"auto_wrapped_{id(raw_message)}",
-                            metadata={'auto_wrapped': True},
+                            metadata={"auto_wrapped": True},
                         )
 
                     if message_batch.is_empty:
@@ -390,12 +390,12 @@ class RecycleConsumerBase(LongJobInterface, ABC):
     def get_stats(self) -> Dict[str, Any]:
         """获取消费者统计信息"""
         stats = self.stats.copy()
-        stats['status'] = self.status.value
-        stats['uptime'] = None
+        stats["status"] = self.status.value
+        stats["uptime"] = None
 
-        if stats['start_time']:
-            uptime = datetime.now() - stats['start_time']
-            stats['uptime'] = uptime.total_seconds()
+        if stats["start_time"]:
+            uptime = datetime.now() - stats["start_time"]
+            stats["uptime"] = uptime.total_seconds()
 
         return stats
 

@@ -6,14 +6,15 @@ Milvus 集合转换器基类
 """
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Type, Any, get_args, get_origin
-from core.oxm.milvus.milvus_collection_base import MilvusCollectionBase
+from typing import Any, Generic, Type, TypeVar, get_args, get_origin
+
 from core.observation.logger import get_logger
+from core.oxm.milvus.milvus_collection_base import MilvusCollectionBase
 
 logger = get_logger(__name__)
 
 # 泛型类型变量 - 只限制 Milvus 集合类型
-MilvusCollectionType = TypeVar('MilvusCollectionType', bound=MilvusCollectionBase)
+MilvusCollectionType = TypeVar("MilvusCollectionType", bound=MilvusCollectionBase)
 
 
 class BaseMilvusConverter(ABC, Generic[MilvusCollectionType]):
@@ -39,7 +40,7 @@ class BaseMilvusConverter(ABC, Generic[MilvusCollectionType]):
             Type[MilvusCollectionType]: Milvus 集合模型类
         """
         # 获取类的泛型基类
-        if hasattr(cls, '__orig_bases__'):
+        if hasattr(cls, "__orig_bases__"):
             for base in cls.__orig_bases__:
                 if get_origin(base) is BaseMilvusConverter:
                     args = get_args(base)

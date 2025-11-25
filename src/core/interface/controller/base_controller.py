@@ -1,6 +1,6 @@
 import inspect
 from abc import ABC
-from typing import Any, Callable, List, Optional, Union, get_origin, get_args
+from typing import Any, Callable, List, Optional, Union, get_args, get_origin
 
 from fastapi import APIRouter, FastAPI
 from fastapi.openapi.utils import get_openapi
@@ -154,13 +154,13 @@ class BaseController(ABC):
             Callable: 应用了默认授权的函数（如果还没有授权装饰器）
         """
         # 检查函数是否已经有授权装饰器
-        if hasattr(func, '__authorization_context__'):
+        if hasattr(func, "__authorization_context__"):
             return func
 
         # 如果是绑定方法，需要获取原始函数
-        if hasattr(func, '__func__'):
+        if hasattr(func, "__func__"):
             # 这是一个绑定方法，检查原始函数是否已有授权装饰器
-            if hasattr(func.__func__, '__authorization_context__'):
+            if hasattr(func.__func__, "__authorization_context__"):
                 return func
 
             # 获取原始函数并应用装饰器
@@ -210,7 +210,7 @@ class BaseController(ABC):
             bool: 是否需要认证
         """
         # 检查函数是否直接有授权上下文
-        if hasattr(func, '__authorization_context__'):
+        if hasattr(func, "__authorization_context__"):
             auth_context = func.__authorization_context__
             return auth_context.need_auth()
 
@@ -232,7 +232,7 @@ class BaseController(ABC):
         import re
 
         # 使用正则表达式匹配 {parameter:type} 格式并替换为 {parameter}
-        return re.sub(r'\{([^}:]+):[^}]+\}', r'{\1}', path)
+        return re.sub(r"\{([^}:]+):[^}]+\}", r"{\1}", path)
 
     def _get_security_config(self) -> List[dict]:
         """
@@ -265,9 +265,9 @@ class BaseController(ABC):
 
     def _get_model_name(self, model: Any) -> str:
         """获取模型名称"""
-        if hasattr(model, '__name__'):
+        if hasattr(model, "__name__"):
             return model.__name__
-        elif hasattr(model, '_name'):
+        elif hasattr(model, "_name"):
             return model._name
         else:
             return str(model)
@@ -290,24 +290,24 @@ class BaseController(ABC):
         discriminator_mapping = {}
 
         for arg in union_args:
-            if hasattr(arg, '__name__'):
+            if hasattr(arg, "__name__"):
                 model_name = arg.__name__
                 one_of.append({"$ref": f"#/components/schemas/{model_name}"})
 
                 # 尝试获取discriminator字段值
-                if hasattr(arg, 'model_fields') and 'type' in arg.model_fields:
+                if hasattr(arg, "model_fields") and "type" in arg.model_fields:
                     # 获取type字段的literal值或enum值
-                    type_field = arg.model_fields['type']
+                    type_field = arg.model_fields["type"]
                     if (
-                        hasattr(type_field, 'default')
+                        hasattr(type_field, "default")
                         and type_field.default is not None
                     ):
                         discriminator_mapping[type_field.default] = (
                             f"#/components/schemas/{model_name}"
                         )
-                    elif hasattr(type_field.annotation, '__args__'):
+                    elif hasattr(type_field.annotation, "__args__"):
                         # 处理Literal类型
-                        literal_values = getattr(type_field.annotation, '__args__', ())
+                        literal_values = getattr(type_field.annotation, "__args__", ())
                         if literal_values:
                             discriminator_mapping[literal_values[0]] = (
                                 f"#/components/schemas/{model_name}"
@@ -337,7 +337,7 @@ class BaseController(ABC):
             openapi_schema = get_openapi(
                 title=app.title,
                 version=app.version,
-                summary=getattr(app, 'summary', None),
+                summary=getattr(app, "summary", None),
                 description=app.description,
                 routes=app.routes,
             )
@@ -356,11 +356,11 @@ class BaseController(ABC):
             # 遍历所有路由来查找BaseController实例
             def collect_controllers_from_routes(routes):
                 for route in routes:
-                    if hasattr(route, 'router') and hasattr(route.router, 'routes'):
+                    if hasattr(route, "router") and hasattr(route.router, "routes"):
                         # 这是一个include_router的情况，递归处理
                         collect_controllers_from_routes(route.router.routes)
-                    elif hasattr(route, 'endpoint') and hasattr(
-                        route.endpoint, '__self__'
+                    elif hasattr(route, "endpoint") and hasattr(
+                        route.endpoint, "__self__"
                     ):
                         # 这是一个绑定方法，检查是否是BaseController实例
                         controller = route.endpoint.__self__
@@ -388,7 +388,7 @@ class BaseController(ABC):
         return custom_openapi
 
     def _add_security_schemes_to_openapi(
-        self, controllers: List['BaseController'], openapi_schema: dict
+        self, controllers: List["BaseController"], openapi_schema: dict
     ):
         """
         添加安全模式定义到 OpenAPI schema
@@ -403,12 +403,12 @@ class BaseController(ABC):
         for controller in controllers:
             # 检查控制器是否有自定义的安全配置提供者
             if (
-                hasattr(controller, '_security_config_provider')
+                hasattr(controller, "_security_config_provider")
                 and controller._security_config_provider is not None
             ):
                 try:
                     # 尝试获取安全模式定义（如果控制器支持的话）
-                    if hasattr(controller, '_get_security_schemes'):
+                    if hasattr(controller, "_get_security_schemes"):
                         schemes = controller._get_security_schemes()
                         if schemes:
                             security_schemes.update(schemes)
@@ -448,7 +448,7 @@ class BaseController(ABC):
             openapi_schema["components"]["securitySchemes"].update(security_schemes)
 
     def _add_security_to_auth_routes(
-        self, controllers: List['BaseController'], openapi_schema: dict
+        self, controllers: List["BaseController"], openapi_schema: dict
     ):
         """
         为需要认证的路由添加安全配置
@@ -460,7 +460,7 @@ class BaseController(ABC):
         # 收集所有需要认证的路由路径
         all_auth_routes = []
         for controller in controllers:
-            if hasattr(controller, '_auth_routes'):
+            if hasattr(controller, "_auth_routes"):
                 all_auth_routes.extend(controller._auth_routes)
 
         # 获取安全配置
@@ -488,7 +488,7 @@ class BaseController(ABC):
         """
         处理单个控制器的extra_models
         """
-        if not hasattr(controller, '_extra_models'):
+        if not hasattr(controller, "_extra_models"):
             return
 
         for model in controller._extra_models:
@@ -496,8 +496,8 @@ class BaseController(ABC):
                 # 对于Union类型，我们需要查找其原始名称
                 # 从控制器的模块中查找这个Union类型的变量名
                 model_name = None
-                if hasattr(controller, '__class__') and hasattr(
-                    controller.__class__, '__module__'
+                if hasattr(controller, "__class__") and hasattr(
+                    controller.__class__, "__module__"
                 ):
                     import sys
 
@@ -520,7 +520,7 @@ class BaseController(ABC):
                 # 同时添加Union成员的schema
                 union_args = self._get_union_args(model)
                 for arg in union_args:
-                    if hasattr(arg, 'model_json_schema'):
+                    if hasattr(arg, "model_json_schema"):
                         arg_name = self._get_model_name(arg)
                         if arg_name not in openapi_schema["components"]["schemas"]:
                             # 生成单个模型的schema
@@ -528,33 +528,33 @@ class BaseController(ABC):
                                 ref_template="#/components/schemas/{model}"
                             )
                             # 提取$defs中的schemas
-                            if '$defs' in arg_schema:
+                            if "$defs" in arg_schema:
                                 openapi_schema["components"]["schemas"].update(
-                                    arg_schema['$defs']
+                                    arg_schema["$defs"]
                                 )
-                                del arg_schema['$defs']
+                                del arg_schema["$defs"]
                             # 添加主模型schema
-                            openapi_schema["components"]["schemas"][
-                                arg_name
-                            ] = arg_schema
+                            openapi_schema["components"]["schemas"][arg_name] = (
+                                arg_schema
+                            )
             else:
                 # 处理普通模型
                 model_name = self._get_model_name(model)
-                if hasattr(model, 'model_json_schema'):
+                if hasattr(model, "model_json_schema"):
                     if model_name not in openapi_schema["components"]["schemas"]:
                         model_schema = model.model_json_schema(
                             ref_template="#/components/schemas/{model}"
                         )
                         # 提取$defs中的schemas
-                        if '$defs' in model_schema:
+                        if "$defs" in model_schema:
                             openapi_schema["components"]["schemas"].update(
-                                model_schema['$defs']
+                                model_schema["$defs"]
                             )
-                            del model_schema['$defs']
+                            del model_schema["$defs"]
                         # 添加主模型schema
-                        openapi_schema["components"]["schemas"][
-                            model_name
-                        ] = model_schema
+                        openapi_schema["components"]["schemas"][model_name] = (
+                            model_schema
+                        )
 
     def register_to_app(self, app: FastAPI):
         """

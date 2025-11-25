@@ -5,18 +5,19 @@ MongoDB 客户端工厂
 支持从环境变量读取配置，提供默认客户端。
 """
 
-import os
 import asyncio
-from typing import Dict, Optional, List
+import os
+from typing import Dict, List, Optional
 from urllib.parse import quote_plus
-from motor.motor_asyncio import AsyncIOMotorClient
-from beanie import init_beanie
-from core.class_annotations.utils import get_annotation
-from core.oxm.mongo.constant.annotations import ClassAnnotationKey, Toggle
 
+from beanie import init_beanie
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from common_utils.datetime_utils import timezone
+from core.class_annotations.utils import get_annotation
 from core.di.decorators import component
 from core.observation.logger import get_logger
-from common_utils.datetime_utils import timezone
+from core.oxm.mongo.constant.annotations import ClassAnnotationKey, Toggle
 from core.oxm.mongo.document_base import DEFAULT_DATABASE
 
 logger = get_logger(__name__)
@@ -62,7 +63,7 @@ class MongoDBConfig:
         # 追加统一参数
         uri_params: Optional[str] = self.uri_params
         if uri_params:
-            separator = '&' if ('?' in base_uri) else '?'
+            separator = "&" if ("?" in base_uri) else "?"
             return f"{base_uri}{separator}{uri_params}"
         return base_uri
 
@@ -77,7 +78,7 @@ class MongoDBConfig:
         return f"{base}:{signature}" if signature else base
 
     @classmethod
-    def from_env(cls, prefix: str = "") -> 'MongoDBConfig':
+    def from_env(cls, prefix: str = "") -> "MongoDBConfig":
         """
         从环境变量创建配置。
 
@@ -195,7 +196,7 @@ class MongoDBClientWrapper:
     async def test_connection(self) -> bool:
         """测试连接"""
         try:
-            await self.client.admin.command('ping')
+            await self.client.admin.command("ping")
             logger.info("✅ MongoDB 连接测试成功: %s", self.config)
             return True
         except Exception as e:

@@ -1,6 +1,7 @@
-import json
 import argparse
+import json
 from collections import defaultdict
+
 import numpy as np
 
 
@@ -8,7 +9,7 @@ def compute_accuracy_from_judgments(file_path):
     """
     Computes accuracies, mean, and standard deviation from a JSON file with LLM judgments.
     """
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     num_judgments = 0
@@ -16,10 +17,10 @@ def compute_accuracy_from_judgments(file_path):
     for user_id, results in data.items():
         if results:
             first_item = results[0]
-            if 'llm_judgments' in first_item and isinstance(
-                first_item['llm_judgments'], dict
+            if "llm_judgments" in first_item and isinstance(
+                first_item["llm_judgments"], dict
             ):
-                num_judgments = len(first_item['llm_judgments'])
+                num_judgments = len(first_item["llm_judgments"])
             break
 
     if num_judgments == 0:
@@ -44,7 +45,7 @@ def compute_accuracy_from_judgments(file_path):
             judgments = item.get("llm_judgments", {})
             category = item.get("category")
             for i in range(num_judgments):
-                if judgments.get(f"judgment_{i+1}", False):
+                if judgments.get(f"judgment_{i + 1}", False):
                     judgment_correct[i] += 1
                     category_correct[i][category] += 1
 
@@ -91,14 +92,14 @@ if __name__ == "__main__":
 
         print("--- Overall Accuracy ---")
         for i, acc in enumerate(accuracies):
-            print(f"Trial {i+1} Accuracy: {acc:.2f}%")
+            print(f"Trial {i + 1} Accuracy: {acc:.2f}%")
 
         print(f"\nMean Accuracy: {mean_acc:.2f}%")
         print(f"Standard Deviation of Accuracy: {std_dev_acc:.2f}")
 
         print("\n--- Accuracy by Category ---")
         for i, cat_acc in enumerate(category_accs):
-            print(f"\nTrial {i+1}:")
+            print(f"\nTrial {i + 1}:")
             for category, acc in sorted(cat_acc.items()):
                 total = category_total.get(category, 0)
                 correct = category_correct[i].get(category, 0)

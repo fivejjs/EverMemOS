@@ -5,17 +5,16 @@
 """
 
 from fastapi import FastAPI
-from core.di.utils import get_beans_by_type, get_bean_by_type
-from core.capability.app_capability import ApplicationCapability
-from core.observation.logger import get_logger
-from core.interface.controller.base_controller import BaseController
-from core.middleware.user_context_middleware import UserContextMiddleware
-from core.middleware.app_context_middleware import AppContextMiddleware
 from fastapi.middleware import Middleware
 
 from base_app import create_base_app
+from core.capability.app_capability import ApplicationCapability
+from core.di.utils import get_bean_by_type, get_beans_by_type
+from core.interface.controller.base_controller import BaseController
 from core.lifespan.lifespan_factory import LifespanFactory
-
+from core.middleware.app_context_middleware import AppContextMiddleware
+from core.middleware.user_context_middleware import UserContextMiddleware
+from core.observation.logger import get_logger
 
 # 推荐用法：模块顶部获取一次logger，后续直接使用（高性能）
 logger = get_logger(__name__)

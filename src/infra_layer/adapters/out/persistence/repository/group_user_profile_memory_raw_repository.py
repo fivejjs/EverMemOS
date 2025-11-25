@@ -6,12 +6,13 @@ GroupUserProfileMemory 原生 CRUD 仓库
 支持基于 user_id 和 group_id 的联合查询和操作。
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from motor.motor_asyncio import AsyncIOMotorClientSession
-from core.observation.logger import get_logger
-from core.di.decorators import repository
-from core.oxm.mongo.base_repository import BaseRepository
+from typing import Any, Dict, List, Optional, Tuple
 
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
+from core.di.decorators import repository
+from core.observation.logger import get_logger
+from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.group_user_profile_memory import (
     GroupUserProfileMemory,
 )
@@ -256,7 +257,7 @@ class GroupUserProfileMemoryRawRepository(BaseRepository[GroupUserProfileMemory]
                 # 删除特定版本 - 直接删除并检查删除数量
                 result = await self.model.find(query_filter, session=session).delete()
                 deleted_count = (
-                    result.deleted_count if hasattr(result, 'deleted_count') else 0
+                    result.deleted_count if hasattr(result, "deleted_count") else 0
                 )
                 success = deleted_count > 0
 
@@ -280,7 +281,7 @@ class GroupUserProfileMemoryRawRepository(BaseRepository[GroupUserProfileMemory]
                 # 删除所有版本
                 result = await self.model.find(query_filter, session=session).delete()
                 deleted_count = (
-                    result.deleted_count if hasattr(result, 'deleted_count') else 0
+                    result.deleted_count if hasattr(result, "deleted_count") else 0
                 )
                 success = deleted_count > 0
 
@@ -610,7 +611,7 @@ class GroupUserProfileMemoryRawRepository(BaseRepository[GroupUserProfileMemory]
                 {"user_id": user_id}, session=session
             ).delete()
             deleted_count = (
-                result.deleted_count if hasattr(result, 'deleted_count') else 0
+                result.deleted_count if hasattr(result, "deleted_count") else 0
             )
             logger.debug(
                 "✅ 根据用户ID删除群组用户档案成功: user_id=%s, 删除 %d 条记录",
@@ -640,7 +641,7 @@ class GroupUserProfileMemoryRawRepository(BaseRepository[GroupUserProfileMemory]
                 {"group_id": group_id}, session=session
             ).delete()
             deleted_count = (
-                result.deleted_count if hasattr(result, 'deleted_count') else 0
+                result.deleted_count if hasattr(result, "deleted_count") else 0
             )
             logger.debug(
                 "✅ 根据群组ID删除群组用户档案成功: group_id=%s, 删除 %d 条记录",

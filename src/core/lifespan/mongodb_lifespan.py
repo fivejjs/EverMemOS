@@ -2,20 +2,19 @@
 MongoDB 生命周期提供者实现
 """
 
-from collections import defaultdict
-from fastapi import FastAPI
-from typing import Any
 import os
+from collections import defaultdict
+from typing import Any
 
-from core.observation.logger import get_logger
-from core.di.utils import get_bean
-from core.di.decorators import component
-from core.lifespan.lifespan_interface import LifespanProvider
-from core.oxm.mongo.document_base import DocumentBase
-from core.di.utils import get_all_subclasses
+from fastapi import FastAPI
+
 from component.mongodb_client_factory import MongoDBClientWrapper
+from core.di.decorators import component
+from core.di.utils import get_all_subclasses, get_bean
+from core.lifespan.lifespan_interface import LifespanProvider
+from core.observation.logger import get_logger
+from core.oxm.mongo.document_base import DocumentBase
 from core.oxm.mongo.migration.manager import MigrationManager
-
 
 logger = get_logger(__name__)
 
@@ -49,7 +48,6 @@ class MongoDBLifespanProvider(LifespanProvider):
         logger.info("正在初始化 MongoDB 连接...")
 
         try:
-
             # 获取 MongoDB 客户端工厂
             self._mongodb_factory = get_bean("mongodb_client_factory")
 
@@ -105,7 +103,7 @@ class MongoDBLifespanProvider(LifespanProvider):
                 logger.error("❌ 关闭 MongoDB 连接时出错: %s", str(e))
 
         # 清理 app.state 中的 MongoDB 相关属性
-        for attr in ['mongodb_clients', 'mongodb_factory']:
+        for attr in ["mongodb_clients", "mongodb_factory"]:
             if hasattr(app.state, attr):
                 delattr(app.state, attr)
 

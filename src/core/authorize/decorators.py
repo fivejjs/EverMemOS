@@ -1,13 +1,15 @@
-import functools
 import asyncio
-from typing import Optional, Callable, Any
+import functools
+from typing import Any, Callable, Optional
+
 from fastapi import HTTPException
 
-from .enums import Role
-from .interfaces import AuthorizationStrategy, AuthorizationContext
-from .strategies import DefaultAuthorizationStrategy
 from core.context.context import get_current_user_info
 from core.observation.logger import get_logger
+
+from .enums import Role
+from .interfaces import AuthorizationContext, AuthorizationStrategy
+from .strategies import DefaultAuthorizationStrategy
 
 logger = get_logger(__name__)
 
@@ -38,7 +40,7 @@ def authorize(
         )
 
         # 将授权信息存储到函数上
-        setattr(func, '__authorization_context__', auth_context)
+        setattr(func, "__authorization_context__", auth_context)
 
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs):
@@ -203,15 +205,15 @@ def check_and_apply_default_auth(func: Callable) -> Callable:
         Callable: 应用了默认授权的函数（如果还没有授权装饰器）
     """
     # 检查函数是否已经有授权装饰器
-    if hasattr(func, '__authorization_context__'):
+    if hasattr(func, "__authorization_context__"):
         return func
 
     # 检查是否为 bound method（类方法）
-    if hasattr(func, '__self__'):
+    if hasattr(func, "__self__"):
         # 这是一个 bound method，需要获取原始函数
         original_func = func.__func__
         # 检查原始函数是否已有授权装饰器
-        if hasattr(original_func, '__authorization_context__'):
+        if hasattr(original_func, "__authorization_context__"):
             return func
 
         # 对原始函数应用装饰器，然后重新绑定

@@ -12,7 +12,7 @@ Key Features:
 
 Usage:
     from memory_layer.cluster_manager import ClusterManager, ClusterManagerConfig
-    
+
     # Initialize
     config = ClusterManagerConfig(
         similarity_threshold=0.65,
@@ -20,23 +20,23 @@ Usage:
         enable_persistence=True
     )
     cluster_mgr = ClusterManager(config)
-    
+
     # Attach to memcell extractor
     cluster_mgr.attach_to_extractor(memcell_extractor)
-    
+
     # Register callbacks for cluster events
     cluster_mgr.on_cluster_assigned(my_callback)
-    
+
     # Clusters are automatically assigned, callbacks notified!
 """
 
 from memory_layer.cluster_manager.config import ClusterManagerConfig
 from memory_layer.cluster_manager.manager import ClusterManager
+from memory_layer.cluster_manager.mongo_cluster_storage import MongoClusterStorage
 from memory_layer.cluster_manager.storage import (
     ClusterStorage,
     InMemoryClusterStorage,
 )
-from memory_layer.cluster_manager.mongo_cluster_storage import MongoClusterStorage
 
 __all__ = [
     "ClusterManager",
@@ -45,4 +45,3 @@ __all__ = [
     "InMemoryClusterStorage",
     "MongoClusterStorage",
 ]
-

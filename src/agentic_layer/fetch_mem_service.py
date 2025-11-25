@@ -8,18 +8,14 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Tuple
-import uuid
+from typing import Any, Dict, List, Optional, Tuple
 
-
-from core.di import get_bean_by_type, get_bean, service
-from infra_layer.adapters.out.persistence.repository.semantic_memory_raw_repository import (
-    SemanticMemoryRawRepository,
-)
-from infra_layer.adapters.out.persistence.repository.episodic_memory_raw_repository import (
-    EpisodicMemoryRawRepository,
+from core.di import get_bean, get_bean_by_type, service
+from infra_layer.adapters.out.persistence.repository.behavior_history_raw_repository import (
+    BehaviorHistoryRawRepository,
 )
 from infra_layer.adapters.out.persistence.repository.core_memory_raw_repository import (
     CoreMemoryRawRepository,
@@ -27,30 +23,31 @@ from infra_layer.adapters.out.persistence.repository.core_memory_raw_repository 
 from infra_layer.adapters.out.persistence.repository.entity_raw_repository import (
     EntityRawRepository,
 )
+from infra_layer.adapters.out.persistence.repository.episodic_memory_raw_repository import (
+    EpisodicMemoryRawRepository,
+)
 from infra_layer.adapters.out.persistence.repository.relationship_raw_repository import (
     RelationshipRawRepository,
 )
-from infra_layer.adapters.out.persistence.repository.behavior_history_raw_repository import (
-    BehaviorHistoryRawRepository,
+from infra_layer.adapters.out.persistence.repository.semantic_memory_raw_repository import (
+    SemanticMemoryRawRepository,
 )
-from .dtos.memory_query import FetchMemResponse, FetchMemRequest
 
+from .dtos.memory_query import FetchMemRequest, FetchMemResponse
 from .memory_models import (
-    MemoryType,
-    MemoryModel,
     BaseMemoryModel,
-    ProfileModel,
-    PreferenceModel,
-    EpisodicMemoryModel,
-    SemanticMemoryModel,
-    EntityModel,
-    RelationModel,
     BehaviorHistoryModel,
     CoreMemoryModel,
+    EntityModel,
+    EpisodicMemoryModel,
+    MemoryModel,
+    MemoryType,
     Metadata,
+    PreferenceModel,
+    ProfileModel,
+    RelationModel,
+    SemanticMemoryModel,
 )
-
-from .dtos.memory_query import FetchMemResponse, FetchMemResponse
 
 logger = logging.getLogger(__name__)
 
@@ -456,12 +453,12 @@ class FetchMemoryServiceImpl(FetchMemoryServiceInterface):
                                 created_at=core_memory.created_at,
                                 updated_at=core_memory.updated_at,
                                 metadata={
-                                    "user_name": base_info.get('user_name', ''),
-                                    "position": base_info.get('position', ''),
-                                    "department": base_info.get('department', ''),
-                                    "company": base_info.get('company', ''),
-                                    "location": base_info.get('location', ''),
-                                    "contact": base_info.get('contact', {}),
+                                    "user_name": base_info.get("user_name", ""),
+                                    "position": base_info.get("position", ""),
+                                    "department": base_info.get("department", ""),
+                                    "company": base_info.get("company", ""),
+                                    "location": base_info.get("location", ""),
+                                    "contact": base_info.get("contact", {}),
                                 },
                             )
                         ]
@@ -477,13 +474,13 @@ class FetchMemoryServiceImpl(FetchMemoryServiceInterface):
                             ProfileModel(
                                 id=str(core_memory.id),
                                 user_id=core_memory.user_id,
-                                name=profile_info.get('personality', '未知'),
-                                age=profile_info.get('age', 0),
-                                gender=profile_info.get('gender', ''),
-                                occupation=profile_info.get('occupation', ''),
-                                interests=profile_info.get('interests', []),
+                                name=profile_info.get("personality", "未知"),
+                                age=profile_info.get("age", 0),
+                                gender=profile_info.get("gender", ""),
+                                occupation=profile_info.get("occupation", ""),
+                                interests=profile_info.get("interests", []),
                                 personality_traits=profile_info.get(
-                                    'personality_traits', {}
+                                    "personality_traits", {}
                                 ),
                                 created_at=core_memory.created_at,
                                 updated_at=core_memory.updated_at,

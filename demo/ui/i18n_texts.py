@@ -8,7 +8,7 @@
     print(texts.get("banner_title"))
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class I18nTexts:
@@ -90,7 +90,10 @@ class I18nTexts:
             "zh": "请选择检索模式 [1-2]",
             "en": "Please select retrieval mode [1-2]",
         },
-        "retrieval_mode_lightweight": {"zh": "轻量级检索", "en": "Lightweight Retrieval"},
+        "retrieval_mode_lightweight": {
+            "zh": "轻量级检索",
+            "en": "Lightweight Retrieval",
+        },
         "retrieval_mode_lightweight_desc": {
             "zh": "快速检索，适合 demo 数据或小批量数据",
             "en": "Fast retrieval, suitable for demo or small-scale data",
@@ -100,7 +103,10 @@ class I18nTexts:
             "zh": "智能多轮检索，提升检索效果，适合大规模数据",
             "en": "Multi-round intelligent retrieval, improves quality, suitable for large-scale data",
         },
-        "retrieval_mode_selected": {"zh": "已选择检索模式", "en": "Retrieval mode selected"},
+        "retrieval_mode_selected": {
+            "zh": "已选择检索模式",
+            "en": "Retrieval mode selected",
+        },
         "retrieval_mode_lightweight_note": {
             "zh": "💡 轻量级检索：速度快，成本低，适合 demo 演示和快速测试",
             "en": "💡 Lightweight: Fast and cost-effective, ideal for demos and quick tests",

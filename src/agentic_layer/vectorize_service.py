@@ -8,12 +8,13 @@ This module provides methods to call DeepInfra API for getting text embeddings.
 
 from __future__ import annotations
 
-import os
 import asyncio
 import logging
+import os
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 from openai import AsyncOpenAI
 
@@ -417,7 +418,7 @@ class DeepInfraVectorizeService(DeepInfraVectorizeServiceInterface):
 
         embeddings = []
         for i, item in enumerate(response.data):
-            if not hasattr(item, 'embedding'):
+            if not hasattr(item, "embedding"):
                 raise DeepInfraError(
                     f"Invalid API response: data[{i}] missing 'embedding' field"
                 )

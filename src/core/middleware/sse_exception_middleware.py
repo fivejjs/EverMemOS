@@ -9,8 +9,8 @@ SSE (Server-Sent Events) 异常处理中间件
 
 import json
 import logging
-from typing import Any, AsyncGenerator, Callable
 from functools import wraps
+from typing import Any, AsyncGenerator, Callable
 
 from fastapi import HTTPException
 
@@ -31,7 +31,7 @@ def yield_sse_data(data: Any) -> str:
 
 
 def sse_exception_handler(
-    func: Callable[..., AsyncGenerator[str, None]]
+    func: Callable[..., AsyncGenerator[str, None]],
 ) -> Callable[..., AsyncGenerator[str, None]]:
     """
     SSE流异常处理装饰器

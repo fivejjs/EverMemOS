@@ -14,7 +14,10 @@ from .project_helpers import (
 )
 from .skill_helpers import merge_skill_lists, normalize_skills_with_evidence
 from .types import ProfileMemory
-from .value_helpers import extract_values_with_evidence, merge_value_with_evidences_lists
+from .value_helpers import (
+    extract_values_with_evidence,
+    merge_value_with_evidences_lists,
+)
 
 logger = get_logger(__name__)
 
@@ -90,9 +93,7 @@ def accumulate_old_memory_entry(
         projects = getattr(memory, "projects_participated", None)
         if projects:
             project_payload = [
-                project_to_dict(project)
-                for project in projects
-                if project is not None
+                project_to_dict(project) for project in projects if project is not None
             ]
             if project_payload:
                 profile_obj["projects_participated"] = project_payload
@@ -271,9 +272,15 @@ def merge_single_profile(
         ),
     )
 
-    merged_projects = merge_projects_participated(existing.projects_participated, new.projects_participated)
+    merged_projects = merge_projects_participated(
+        existing.projects_participated, new.projects_participated
+    )
 
-    output_reasoning = new.output_reasoning if new.output_reasoning is not None else existing.output_reasoning
+    output_reasoning = (
+        new.output_reasoning
+        if new.output_reasoning is not None
+        else existing.output_reasoning
+    )
 
     return ProfileMemory(
         memory_type=MemoryType.PROFILE,
@@ -354,7 +361,9 @@ def merge_profiles(
             or None,
             user_goal=participant_profile.get("user_goal"),
             work_responsibility=participant_profile.get("work_responsibility"),
-            working_habit_preference=participant_profile.get("working_habit_preference"),
+            working_habit_preference=participant_profile.get(
+                "working_habit_preference"
+            ),
             interests=participant_profile.get("interests"),
             tendency=participant_profile.get("tendency"),
             type=RawDataType.CONVERSATION,

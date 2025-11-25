@@ -15,21 +15,21 @@
     python src/bootstrap.py src/run_memorize.py --input data/example.json --validate-only
 """
 
-import json
 import argparse
-import sys
 import asyncio
+import json
+import sys
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 ALLOWED_SCENES: tuple[str, str] = ("assistant", "group_chat")
 
+from core.observation.logger import get_logger
 from infra_layer.adapters.input.api.mapper.group_chat_converter import (
     convert_group_chat_format_to_memorize_input,
     validate_group_chat_format_input,
 )
-from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -67,7 +67,7 @@ class GroupChatMemorizer:
         try:
             # 读取文件
             logger.info(f"正在读取文件: {file_path}")
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             # 验证格式
@@ -89,8 +89,8 @@ class GroupChatMemorizer:
                 logger.info(f"消息数量: {len(messages)}")
 
                 if messages:
-                    first_time = messages[0].get('create_time', 'N/A')
-                    last_time = messages[-1].get('create_time', 'N/A')
+                    first_time = messages[0].get("create_time", "N/A")
+                    last_time = messages[-1].get("create_time", "N/A")
                     logger.info(f"时间范围: {first_time} ~ {last_time}")
 
                 return True
@@ -142,7 +142,7 @@ class GroupChatMemorizer:
 
             async with httpx.AsyncClient(timeout=300.0) as client:
                 for i, message in enumerate(messages):
-                    logger.info(f"\n--- 处理第 {i+1}/{len(messages)} 条消息 ---")
+                    logger.info(f"\n--- 处理第 {i + 1}/{len(messages)} 条消息 ---")
 
                     # 构建简单直接的单条消息格式
                     request_data = {
@@ -173,8 +173,8 @@ class GroupChatMemorizer:
 
                         if response.status_code == 200:
                             result = response.json()
-                            result_data = result.get('result', {})
-                            memory_count = result_data.get('count', 0)
+                            result_data = result.get("result", {})
+                            memory_count = result_data.get("count", 0)
 
                             total_memories += memory_count
                             success_count += 1
@@ -248,7 +248,7 @@ class GroupChatMemorizer:
 
             async with httpx.AsyncClient(timeout=300.0) as client:
                 for i, message in enumerate(messages):
-                    logger.info(f"\n--- 处理第 {i+1}/{len(messages)} 条消息 ---")
+                    logger.info(f"\n--- 处理第 {i + 1}/{len(messages)} 条消息 ---")
 
                     message_to_send = message
                     if self.scene and not message.get("scene"):
@@ -268,8 +268,8 @@ class GroupChatMemorizer:
                         request_data["group_name"] = group_name
 
                     # 设置 current_time（使用当前消息的时间戳）
-                    if message_to_send.get('timestamp'):
-                        request_data["current_time"] = message_to_send['timestamp']
+                    if message_to_send.get("timestamp"):
+                        request_data["current_time"] = message_to_send["timestamp"]
 
                     # 发送请求
                     try:
@@ -281,10 +281,10 @@ class GroupChatMemorizer:
 
                         if response.status_code == 200:
                             result = response.json()
-                            result_data = result.get('result', {})
-                            memory_count = result_data.get('count', 0)
+                            result_data = result.get("result", {})
+                            memory_count = result_data.get("count", 0)
 
-                            saved_memories = result_data.get('saved_memories')
+                            saved_memories = result_data.get("saved_memories")
                             if memory_count == 0 and saved_memories:
                                 memory_count = len(saved_memories)
 
@@ -346,7 +346,7 @@ class GroupChatMemorizer:
             logger.info("读取群聊数据")
             logger.info("=" * 70)
             logger.info(f"正在读取文件: {file_path}")
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 group_chat_data = json.load(f)
 
             # 根据参数决定使用哪个 API
@@ -361,10 +361,10 @@ class GroupChatMemorizer:
                     group_chat_data
                 )
 
-                messages = memorize_input.get('messages', [])
-                group_id = memorize_input.get('group_id')
-                group_name = memorize_input.get('group_name')
-                raw_data_type = memorize_input.get('raw_data_type', 'Conversation')
+                messages = memorize_input.get("messages", [])
+                group_id = memorize_input.get("group_id")
+                group_name = memorize_input.get("group_name")
+                raw_data_type = memorize_input.get("raw_data_type", "Conversation")
 
                 logger.info("✓ 转换完成！")
                 logger.info(f"  - 消息数量: {len(messages)}")
@@ -393,7 +393,7 @@ class GroupChatMemorizer:
 async def async_main():
     """异步主函数"""
     parser = argparse.ArgumentParser(
-        description='群聊记忆存储脚本',
+        description="群聊记忆存储脚本",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例用法:
@@ -416,28 +416,28 @@ async def async_main():
     )
 
     parser.add_argument(
-        '--input',
+        "--input",
         type=str,
         required=True,
-        help='输入的群聊JSON文件路径（GroupChatFormat格式）',
+        help="输入的群聊JSON文件路径（GroupChatFormat格式）",
     )
     parser.add_argument(
-        '--api-url', type=str, help='memorize API地址（必需，除非使用 --validate-only）'
+        "--api-url", type=str, help="memorize API地址（必需，除非使用 --validate-only）"
     )
     parser.add_argument(
-        '--use-v2',
-        action='store_true',
-        help='使用 V2 接口（需要先转换数据，逐条处理），默认使用 V3 接口',
+        "--use-v2",
+        action="store_true",
+        help="使用 V2 接口（需要先转换数据，逐条处理），默认使用 V3 接口",
     )
     parser.add_argument(
-        '--validate-only', action='store_true', help='仅验证输入文件格式，不执行存储'
+        "--validate-only", action="store_true", help="仅验证输入文件格式，不执行存储"
     )
     parser.add_argument(
-        '--scene',
+        "--scene",
         type=str,
         choices=ALLOWED_SCENES,
         required=True,
-        help='记忆提取场景（必填，仅支持 assistant 或 group_chat）',
+        help="记忆提取场景（必填，仅支持 assistant 或 group_chat）",
     )
 
     args = parser.parse_args()

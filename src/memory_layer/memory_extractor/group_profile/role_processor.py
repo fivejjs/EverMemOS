@@ -1,7 +1,7 @@
 """Role management utilities for group profile extraction."""
 
-from typing import Dict, List, Set, Optional
 from enum import Enum
+from typing import Dict, List, Optional, Set
 
 from core.observation.logger import get_logger
 

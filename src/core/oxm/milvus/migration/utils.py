@@ -12,17 +12,16 @@ Milvus 集合重建与别名切换通用工具
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Callable, Type
+from typing import Callable, Optional, Type
 
 from pymilvus import Collection
 
+from core.di.utils import get_all_subclasses
 from core.observation.logger import get_logger
 from core.oxm.milvus.milvus_collection_base import (
     MilvusCollectionBase,
     MilvusCollectionWithSuffix,
 )
-from core.di.utils import get_all_subclasses
-
 
 logger = get_logger(__name__)
 
@@ -57,7 +56,7 @@ def find_collection_manager_by_alias(alias: str) -> Type[MilvusCollectionBase]:
         # 跳过抽象类
         # pylint: disable=protected-access  # 框架内部使用，访问子类的配置属性
         if (
-            not hasattr(doc_class, '_COLLECTION_NAME')
+            not hasattr(doc_class, "_COLLECTION_NAME")
             or doc_class._COLLECTION_NAME is None
         ):
             continue
@@ -67,14 +66,10 @@ def find_collection_manager_by_alias(alias: str) -> Type[MilvusCollectionBase]:
             # 临时实例化以获取 alias（需要解析 suffix）
             try:
                 # 尝试从 alias 解析 suffix
-                base_name = (
-                    doc_class._COLLECTION_NAME
-                )  # pylint: disable=protected-access
+                base_name = doc_class._COLLECTION_NAME  # pylint: disable=protected-access
                 if alias.startswith(base_name):
                     return doc_class
-            except (
-                Exception
-            ):  # pylint: disable=broad-except  # 忽略实例化失败，继续尝试下一个类
+            except Exception:  # pylint: disable=broad-except  # 忽略实例化失败，继续尝试下一个类
                 continue
         else:
             # 对于 MilvusCollectionBase，直接比较 _COLLECTION_NAME
@@ -118,9 +113,7 @@ def rebuild_collection(
     # 2. 实例化管理器（从 alias 解析 suffix）
     if issubclass(collection_class, MilvusCollectionWithSuffix):
         # 从 alias 解析 suffix
-        base_name = (
-            collection_class._COLLECTION_NAME
-        )  # pylint: disable=protected-access
+        base_name = collection_class._COLLECTION_NAME  # pylint: disable=protected-access
         suffix = None
         if alias != base_name and alias.startswith(base_name + "_"):
             suffix = alias[len(base_name) + 1 :]

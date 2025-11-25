@@ -5,14 +5,15 @@ This module provides a simple and extensible base class for detecting
 boundaries in various types of content (conversations, emails, notes, etc.).
 """
 
+import json
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional
 from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional
+
 from memory_layer.llm.llm_provider import LLMProvider
-from memory_layer.types import RawDataType, Memory, MemCell
-import re
+from memory_layer.types import MemCell, Memory, RawDataType
 
 try:
     from bson import ObjectId
@@ -22,7 +23,7 @@ except ImportError:
     BSON_AVAILABLE = False
 
 
-iso_pattern = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'
+iso_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}"
 
 
 @dataclass
@@ -53,7 +54,7 @@ class RawData:  # Memcell
             return {k: self._serialize_value(v) for k, v in value.items()}
         elif isinstance(value, (list, tuple)):
             return [self._serialize_value(item) for item in value]
-        elif hasattr(value, '__dict__'):
+        elif hasattr(value, "__dict__"):
             # 处理自定义对象，转换为字典
             return self._serialize_value(value.__dict__)
         else:
@@ -102,31 +103,31 @@ class RawData:  # Memcell
 
         # 精确匹配的时间字段名（基于项目中实际使用的字段名）
         exact_datetime_fields = {
-            'timestamp',
-            'createTime',
-            'updateTime',
-            'create_time',
-            'update_time',
-            'sent_timestamp',
-            'received_timestamp',
-            'create_timestamp',
-            'last_update_timestamp',
-            'modify_timestamp',
-            'readUpdateTime',
-            'created_at',
-            'updated_at',
-            'joinTime',
-            'leaveTime',
-            'lastOnlineTime',
-            'sync_time',
-            'processed_at',
-            'start_time',
-            'end_time',
-            'event_time',
-            'build_timestamp',
-            'datetime',
-            'created',
-            'updated',  # 添加常见的时间字段变体
+            "timestamp",
+            "createTime",
+            "updateTime",
+            "create_time",
+            "update_time",
+            "sent_timestamp",
+            "received_timestamp",
+            "create_timestamp",
+            "last_update_timestamp",
+            "modify_timestamp",
+            "readUpdateTime",
+            "created_at",
+            "updated_at",
+            "joinTime",
+            "leaveTime",
+            "lastOnlineTime",
+            "sync_time",
+            "processed_at",
+            "start_time",
+            "end_time",
+            "event_time",
+            "build_timestamp",
+            "datetime",
+            "created",
+            "updated",  # 添加常见的时间字段变体
         }
 
         field_lower = field_name.lower()
@@ -137,36 +138,36 @@ class RawData:  # Memcell
 
         # 排除不应该被识别为时间字段的常见词汇
         exclusions = {
-            'runtime',
-            'timeout',
-            'timeline',
-            'timestamp_format',
-            'time_zone',
-            'time_limit',
-            'timestamp_count',
-            'timestamp_enabled',
-            'time_sync',
-            'playtime',
-            'lifetime',
-            'uptime',
-            'downtime',
+            "runtime",
+            "timeout",
+            "timeline",
+            "timestamp_format",
+            "time_zone",
+            "time_limit",
+            "timestamp_count",
+            "timestamp_enabled",
+            "time_sync",
+            "playtime",
+            "lifetime",
+            "uptime",
+            "downtime",
         }
 
         if field_name in exclusions or field_lower in exclusions:
             return False
 
         # 后缀匹配检查（更严格的规则）
-        time_suffixes = ['_time', '_timestamp', '_at', '_date']
+        time_suffixes = ["_time", "_timestamp", "_at", "_date"]
         for suffix in time_suffixes:
             if field_name.endswith(suffix) or field_lower.endswith(suffix):
                 return True
 
         # 前缀匹配检查（更严格的规则）
-        if field_name.endswith('Time') and not field_name.endswith('runtime'):
+        if field_name.endswith("Time") and not field_name.endswith("runtime"):
             # 匹配 xxxTime 模式，但排除 runtime
             return True
 
-        if field_name.endswith('Timestamp'):
+        if field_name.endswith("Timestamp"):
             # 匹配 xxxTimestamp 模式
             return True
 
@@ -198,19 +199,19 @@ class RawData:  # Memcell
         """
         try:
             data = {
-                'content': self._serialize_value(self.content),
-                'data_id': self.data_id,
-                'data_type': self.data_type,
-                'metadata': (
+                "content": self._serialize_value(self.content),
+                "data_id": self.data_id,
+                "data_type": self.data_type,
+                "metadata": (
                     self._serialize_value(self.metadata) if self.metadata else None
                 ),
             }
-            return json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+            return json.dumps(data, ensure_ascii=False, separators=(",", ":"))
         except (TypeError, ValueError) as e:
             raise ValueError(f"无法序列化RawData为JSON: {e}") from e
 
     @classmethod
-    def from_json_str(cls, json_str: str) -> 'RawData':
+    def from_json_str(cls, json_str: str) -> "RawData":
         """
         从JSON字符串反序列化为RawData对象
 
@@ -232,17 +233,17 @@ class RawData:  # Memcell
             raise ValueError("JSON必须是一个对象")
 
         # 检查必需字段
-        if 'content' not in data or 'data_id' not in data:
+        if "content" not in data or "data_id" not in data:
             raise ValueError("JSON缺少必需字段: content 和 data_id")
 
         # 创建实例并反序列化值
         instance = cls.__new__(cls)
-        instance.content = instance._deserialize_value(data['content'], 'content')
-        instance.data_id = data['data_id']
-        instance.data_type = data.get('data_type')
+        instance.content = instance._deserialize_value(data["content"], "content")
+        instance.data_id = data["data_id"]
+        instance.data_type = data.get("data_type")
         instance.metadata = (
-            instance._deserialize_value(data.get('metadata'), 'metadata')
-            if data.get('metadata')
+            instance._deserialize_value(data.get("metadata"), "metadata")
+            if data.get("metadata")
             else None
         )
 
@@ -271,9 +272,7 @@ class StatusResult:
 
 
 class MemCellExtractor(ABC):
-    def __init__(
-        self, raw_data_type: RawDataType, llm_provider=LLMProvider
-    ):
+    def __init__(self, raw_data_type: RawDataType, llm_provider=LLMProvider):
         self.raw_data_type = raw_data_type
         self._llm_provider = llm_provider
 

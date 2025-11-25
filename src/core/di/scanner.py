@@ -3,13 +3,13 @@
 组件扫描器
 """
 
+import importlib
 import os
 import sys
-import importlib
-from pathlib import Path
-from typing import List, Set, Optional
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import List, Optional, Set
 
 from core.observation.logger import get_logger
 
@@ -22,13 +22,13 @@ class ComponentScanner:
         self.scan_packages: List[str] = []
         # 使用'di'会导致audit类似的目录会被过滤，因此需要字段全量匹配
         self.exclude_paths: Set[str] = {
-            '/di/',
-            '/config/',
-            '__pycache__',
-            '.git',
-            '.pytest_cache',
+            "/di/",
+            "/config/",
+            "__pycache__",
+            ".git",
+            ".pytest_cache",
         }
-        self.exclude_patterns: Set[str] = {'test_', '_test', 'tests'}
+        self.exclude_patterns: Set[str] = {"test_", "_test", "tests"}
         self.include_patterns: Set[str] = set()
         self.recursive = True
         # self.parallel = True if os.getenv("ENV") == 'dev' else False
@@ -41,65 +41,65 @@ class ComponentScanner:
         # 需要预加载的关键模块，避免并行导入时的循环依赖
         self.preload_modules = [
             # SQLAlchemy 核心模块
-            'sqlalchemy.engine',
-            'sqlalchemy.engine.base',
-            'sqlalchemy.engine.default',
-            'sqlalchemy.pool',
-            'sqlalchemy.sql',
-            'sqlalchemy.sql.schema',
-            'sqlalchemy.sql.sqltypes',
-            'sqlalchemy.orm',
-            'sqlalchemy.orm.session',
-            'sqlalchemy.orm.query',
+            "sqlalchemy.engine",
+            "sqlalchemy.engine.base",
+            "sqlalchemy.engine.default",
+            "sqlalchemy.pool",
+            "sqlalchemy.sql",
+            "sqlalchemy.sql.schema",
+            "sqlalchemy.sql.sqltypes",
+            "sqlalchemy.orm",
+            "sqlalchemy.orm.session",
+            "sqlalchemy.orm.query",
             # Pydantic 核心模块
-            'pydantic',
-            'pydantic.fields',
-            'pydantic.main',
-            'pydantic.validators',
-            'pydantic.v1',
-            'pydantic.v1.fields',
-            'pydantic.v1.main',
+            "pydantic",
+            "pydantic.fields",
+            "pydantic.main",
+            "pydantic.validators",
+            "pydantic.v1",
+            "pydantic.v1.fields",
+            "pydantic.v1.main",
             # 其他可能引起循环依赖的模块
-            'typing_extensions',
-            'dataclasses',
+            "typing_extensions",
+            "dataclasses",
         ]
 
-    def add_scan_path(self, path: str) -> 'ComponentScanner':
+    def add_scan_path(self, path: str) -> "ComponentScanner":
         """添加扫描路径"""
         self.scan_paths.append(path)
         return self
 
-    def add_scan_package(self, package: str) -> 'ComponentScanner':
+    def add_scan_package(self, package: str) -> "ComponentScanner":
         """添加扫描包"""
         self.scan_packages.append(package)
         return self
 
-    def exclude_path(self, path: str) -> 'ComponentScanner':
+    def exclude_path(self, path: str) -> "ComponentScanner":
         """排除路径"""
         self.exclude_paths.add(path)
         return self
 
-    def exclude_pattern(self, pattern: str) -> 'ComponentScanner':
+    def exclude_pattern(self, pattern: str) -> "ComponentScanner":
         """排除模式"""
         self.exclude_patterns.add(pattern)
         return self
 
-    def include_pattern(self, pattern: str) -> 'ComponentScanner':
+    def include_pattern(self, pattern: str) -> "ComponentScanner":
         """包含模式"""
         self.include_patterns.add(pattern)
         return self
 
-    def set_recursive(self, recursive: bool) -> 'ComponentScanner':
+    def set_recursive(self, recursive: bool) -> "ComponentScanner":
         """设置是否递归扫描"""
         self.recursive = recursive
         return self
 
-    def set_parallel(self, parallel: bool) -> 'ComponentScanner':
+    def set_parallel(self, parallel: bool) -> "ComponentScanner":
         """设置是否并行扫描"""
         self.parallel = parallel
         return self
 
-    def set_max_workers(self, max_workers: int) -> 'ComponentScanner':
+    def set_max_workers(self, max_workers: int) -> "ComponentScanner":
         """设置最大工作线程数"""
         self.max_workers = max_workers
         return self
@@ -133,13 +133,13 @@ class ComponentScanner:
         if failed_count > 0:
             self.logger.debug("跳过了 %d 个不可用的模块", failed_count)
 
-    def add_preload_module(self, module_name: str) -> 'ComponentScanner':
+    def add_preload_module(self, module_name: str) -> "ComponentScanner":
         """添加需要预加载的模块"""
         if module_name not in self.preload_modules:
             self.preload_modules.append(module_name)
         return self
 
-    def scan(self) -> 'ComponentScanner':
+    def scan(self) -> "ComponentScanner":
         """执行扫描"""
         self.logger.info("🔍 开始组件扫描...")
 
@@ -172,14 +172,14 @@ class ComponentScanner:
 
         # 扫描路径
         if self.scan_paths:
-            self.logger.debug("扫描路径: %s", ', '.join(self.scan_paths))
+            self.logger.debug("扫描路径: %s", ", ".join(self.scan_paths))
         for scan_path in self.scan_paths:
             files_from_path = self._collect_files_from_path(scan_path)
             python_files.extend(files_from_path)
 
         # 扫描包
         if self.scan_packages:
-            self.logger.debug("扫描包: %s", ', '.join(self.scan_packages))
+            self.logger.debug("扫描包: %s", ", ".join(self.scan_packages))
         for package in self.scan_packages:
             files_from_package = self._collect_files_from_package(package)
             python_files.extend(files_from_package)
@@ -202,7 +202,7 @@ class ComponentScanner:
             self.logger.warning("扫描路径不存在: %s", path)
             return files
 
-        if path_obj.is_file() and path_obj.suffix == '.py':
+        if path_obj.is_file() and path_obj.suffix == ".py":
             if self._should_include_file(path_obj):
                 files.append(path_obj)
         elif path_obj.is_dir():
@@ -217,7 +217,7 @@ class ComponentScanner:
         """从包收集Python文件"""
         try:
             package = importlib.import_module(package_name)
-            if hasattr(package, '__file__') and package.__file__:
+            if hasattr(package, "__file__") and package.__file__:
                 package_path = Path(package.__file__).parent
                 return self._collect_files_from_path(str(package_path))
         except ImportError as e:
@@ -228,7 +228,7 @@ class ComponentScanner:
     def _should_include_file(self, file_path: Path) -> bool:
         """检查是否应该包含文件"""
         # 排除特殊文件
-        if file_path.name.startswith('__') and file_path.name.endswith('__.py'):
+        if file_path.name.startswith("__") and file_path.name.endswith("__.py"):
             return False
 
         # 检查排除路径
@@ -378,17 +378,17 @@ def auto_scan():
         excluded_dirs = []
         for item in src_path.iterdir():
             if item.is_dir() and item.name in {
-                'di',
-                'config',
-                'test',
-                'tests',
-                '__pycache__',
+                "di",
+                "config",
+                "test",
+                "tests",
+                "__pycache__",
             }:
                 scanner.exclude_path(item.name)
                 excluded_dirs.append(item.name)
 
         if excluded_dirs:
-            logger.debug("智能排除目录: %s", ', '.join(excluded_dirs))
+            logger.debug("智能排除目录: %s", ", ".join(excluded_dirs))
 
         return scanner.scan()
     else:

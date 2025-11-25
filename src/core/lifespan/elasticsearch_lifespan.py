@@ -2,15 +2,16 @@
 Elasticsearch 生命周期提供者实现
 """
 
-from fastapi import FastAPI
 from typing import Any
 
-from core.observation.logger import get_logger
-from core.di.utils import get_bean, get_all_subclasses, get_bean_by_type
-from core.di.decorators import component
-from core.lifespan.lifespan_interface import LifespanProvider
-from core.oxm.es.doc_base import DocBase
+from fastapi import FastAPI
+
 from component.elasticsearch_client_factory import ElasticsearchClientFactory
+from core.di.decorators import component
+from core.di.utils import get_all_subclasses, get_bean, get_bean_by_type
+from core.lifespan.lifespan_interface import LifespanProvider
+from core.observation.logger import get_logger
+from core.oxm.es.doc_base import DocBase
 
 logger = get_logger(__name__)
 
@@ -58,7 +59,7 @@ class ElasticsearchLifespanProvider(LifespanProvider):
             # 过滤出有效的文档类
             document_classes = []
             for doc_class in all_doc_classes:
-                if hasattr(doc_class, '_index') and hasattr(doc_class._index, '_name'):
+                if hasattr(doc_class, "_index") and hasattr(doc_class._index, "_name"):
                     index_name = doc_class._index._name
                     # 检查索引名称是否有效
                     if index_name and index_name.strip():

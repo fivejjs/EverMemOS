@@ -3,14 +3,14 @@ Long job interfaces and base classes.
 长任务接口和基础类定义。
 """
 
-from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict
 import asyncio
-from enum import Enum
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, Optional
 
 # 从 longjob_error 中导入错误类
-from core.longjob.longjob_error import FatalError, BusinessLogicError
+from core.longjob.longjob_error import BusinessLogicError, FatalError
 
 
 @dataclass
@@ -36,7 +36,7 @@ class MessageBatch:
             return True
 
         # 如果是列表或类似容器，检查长度
-        if hasattr(self.data, '__len__'):
+        if hasattr(self.data, "__len__"):
             try:
                 return len(self.data) == 0
             except (TypeError, AttributeError):

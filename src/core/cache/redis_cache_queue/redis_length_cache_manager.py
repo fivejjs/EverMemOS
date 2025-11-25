@@ -7,14 +7,15 @@ Redis 长度限制缓存管理器
 - 队列过期时间为 60 分钟，每次 append 时续期
 """
 
-import time
 import random
-from typing import List, Dict, Any, Optional, Union
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
+from component.redis_provider import RedisProvider
 from core.di.decorators import component
 from core.observation.logger import get_logger
-from component.redis_provider import RedisProvider
+
 from .redis_data_processor import RedisDataProcessor
 
 # 配置常量
@@ -106,7 +107,7 @@ class RedisLengthCacheFactory:
         max_length: int = DEFAULT_MAX_LENGTH,
         expire_minutes: int = DEFAULT_EXPIRE_MINUTES,
         cleanup_probability: float = DEFAULT_CLEANUP_PROBABILITY,
-    ) -> 'RedisLengthCacheManager':
+    ) -> "RedisLengthCacheManager":
         """
         创建缓存管理器实例
 
@@ -425,7 +426,7 @@ class RedisLengthCacheManager:
                     # 安全地转换分数为时间戳
                     try:
                         if isinstance(score_raw, bytes):
-                            score_str = score_raw.decode('utf-8')
+                            score_str = score_raw.decode("utf-8")
                         else:
                             score_str = str(score_raw)
                         timestamp = int(float(score_str))

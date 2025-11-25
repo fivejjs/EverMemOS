@@ -5,13 +5,14 @@ PersonalSemanticMemory Beanie ODM 模型
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from beanie import Indexed
-from core.oxm.mongo.document_base import DocumentBase
-from pydantic import Field, ConfigDict
-from pymongo import IndexModel, ASCENDING, DESCENDING
+from typing import Any, Dict, List, Optional
+
+from beanie import Indexed, PydanticObjectId
+from pydantic import ConfigDict, Field
+from pymongo import ASCENDING, DESCENDING, IndexModel
+
 from core.oxm.mongo.audit_base import AuditBase
-from beanie import PydanticObjectId
+from core.oxm.mongo.document_base import DocumentBase
 
 
 class PersonalSemanticMemory(DocumentBase, AuditBase):
@@ -28,8 +29,12 @@ class PersonalSemanticMemory(DocumentBase, AuditBase):
     parent_episode_id: str = Field(..., description="父情景记忆的 event_id")
 
     # 时间范围字段
-    start_time: Optional[str] = Field(default=None, description="语义记忆开始时间（日期字符串，如 2024-01-01）")
-    end_time: Optional[str] = Field(default=None, description="语义记忆结束时间（日期字符串，如 2024-12-31）")
+    start_time: Optional[str] = Field(
+        default=None, description="语义记忆开始时间（日期字符串，如 2024-01-01）"
+    )
+    end_time: Optional[str] = Field(
+        default=None, description="语义记忆结束时间（日期字符串，如 2024-12-31）"
+    )
     duration_days: Optional[int] = Field(default=None, description="持续天数")
 
     # 群组和参与者信息
@@ -37,7 +42,9 @@ class PersonalSemanticMemory(DocumentBase, AuditBase):
     participants: Optional[List[str]] = Field(default=None, description="相关参与者")
 
     # 向量和模型
-    vector: Optional[List[float]] = Field(default=None, description="语义记忆的文本向量")
+    vector: Optional[List[float]] = Field(
+        default=None, description="语义记忆的文本向量"
+    )
     vector_model: Optional[str] = Field(default=None, description="使用的向量化模型")
 
     # 证据和扩展信息
@@ -61,7 +68,7 @@ class PersonalSemanticMemory(DocumentBase, AuditBase):
                 "vector": [0.1, 0.2, 0.3],
                 "vector_model": "text-embedding-3-small",
                 "evidence": "多次在聊天中提到喜欢吃火锅",
-                "extend": {"confidence": 0.9}
+                "extend": {"confidence": 0.9},
             }
         },
     )
@@ -110,4 +117,3 @@ class PersonalSemanticMemory(DocumentBase, AuditBase):
 
 # 导出模型
 __all__ = ["PersonalSemanticMemory"]
-

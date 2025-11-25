@@ -1,15 +1,17 @@
+import time
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from motor.motor_asyncio import AsyncIOMotorClientSession
+from typing import Any, Dict, List, Optional
+
 from bson import ObjectId
-from core.observation.logger import get_logger
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
+from agentic_layer.vectorize_service import get_vectorize_service
 from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.episodic_memory import (
     EpisodicMemory,
 )
-from agentic_layer.vectorize_service import get_vectorize_service
-import time
 
 logger = get_logger(__name__)
 
@@ -172,7 +174,7 @@ class EpisodicMemoryRawRepository(BaseRepository[EpisodicMemory]):
             ).delete()
 
             deleted_count = (
-                result.deleted_count if hasattr(result, 'deleted_count') else 0
+                result.deleted_count if hasattr(result, "deleted_count") else 0
             )
             success = deleted_count > 0
 

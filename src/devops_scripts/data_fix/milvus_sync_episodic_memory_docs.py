@@ -14,11 +14,10 @@
 
 import traceback
 from datetime import timedelta
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from core.observation.logger import get_logger
 from core.di.utils import get_bean_by_type
-
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -40,6 +39,7 @@ async def sync_episodic_memory_docs(
         limit: 最多处理的文档数量，None 表示处理全部
         days: 仅处理最近 N 天创建的文档，None 表示处理全部
     """
+    from common_utils.datetime_utils import get_now_with_timezone
     from infra_layer.adapters.out.persistence.repository.episodic_memory_raw_repository import (
         EpisodicMemoryRawRepository,
     )
@@ -49,7 +49,6 @@ async def sync_episodic_memory_docs(
     from infra_layer.adapters.out.search.milvus.memory.episodic_memory_collection import (
         EpisodicMemoryCollection,
     )
-    from common_utils.datetime_utils import get_now_with_timezone
 
     # 获取 MongoDB Repository
     mongo_repo = get_bean_by_type(EpisodicMemoryRawRepository)
@@ -137,7 +136,7 @@ async def sync_episodic_memory_docs(
                 except Exception as e:  # noqa: BLE001
                     logger.error(
                         "转换文档失败: id=%s, error=%s",
-                        getattr(mongo_doc, 'id', 'unknown'),
+                        getattr(mongo_doc, "id", "unknown"),
                         e,
                     )
                     batch_errors += 1

@@ -7,8 +7,10 @@ MongoDB 审计基类
 try:
     from datetime import datetime
     from typing import Optional
-    from beanie import before_event, Insert, Update
-    from pydantic import Field, BaseModel
+
+    from beanie import Insert, Update, before_event
+    from pydantic import BaseModel, Field
+
     from common_utils.datetime_utils import get_now_with_timezone
 
     BEANIE_AVAILABLE = True

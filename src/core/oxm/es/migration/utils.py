@@ -6,11 +6,13 @@ Elasticsearch 索引迁移工具
 
 import time
 import traceback
-from typing import Type, Any
+from typing import Any, Type
+
 from elasticsearch import NotFoundError, RequestError
 from elasticsearch.dsl import AsyncDocument
-from core.observation.logger import get_logger
+
 from core.di.utils import get_all_subclasses
+from core.observation.logger import get_logger
 from core.oxm.es.doc_base import DocBase, get_index_ns
 
 logger = get_logger(__name__)
@@ -101,14 +103,14 @@ async def rebuild_index(
         ValueError: 如果文档类缺少必要的属性或方法
     """
     # 验证文档类
-    if not hasattr(document_class, 'PATTERN'):
+    if not hasattr(document_class, "PATTERN"):
         raise ValueError("文档类 %s 必须有 PATTERN 属性" % document_class.__name__)
-    if not hasattr(document_class, 'dest'):
+    if not hasattr(document_class, "dest"):
         raise ValueError("文档类 %s 必须有 dest() 方法" % document_class.__name__)
 
     # 获取索引信息
-    index_settings = getattr(document_class, '_index', None)
-    if not index_settings or not hasattr(index_settings, '_name'):
+    index_settings = getattr(document_class, "_index", None)
+    if not index_settings or not hasattr(index_settings, "_name"):
         raise ValueError("文档类 %s 缺少必要的索引设置" % document_class.__name__)
 
     alias_name = index_settings._name

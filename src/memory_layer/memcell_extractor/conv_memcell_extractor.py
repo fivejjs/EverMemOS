@@ -5,37 +5,41 @@ This module provides a simple and extensible base class for detecting
 boundaries in various types of content (conversations, emails, notes, etc.).
 """
 
-import time
-import os
-from typing import Dict, Any, Optional, List, Tuple
-from datetime import datetime
-from dataclasses import dataclass
-import uuid
-import json, re
 import asyncio
+import json
+import os
+import re
+import time
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from agentic_layer.vectorize_service import get_vectorize_service
+from common_utils.datetime_utils import from_iso_format as dt_from_iso_format
+from common_utils.datetime_utils import from_timestamp as dt_from_timestamp
 from common_utils.datetime_utils import (
-    from_iso_format as dt_from_iso_format,
-    from_timestamp as dt_from_timestamp,
     get_now_with_timezone,
 )
-from ..llm.llm_provider import LLMProvider
-from ..types import RawDataType
-from ..prompts.zh.conv_prompts import CONV_BOUNDARY_DETECTION_PROMPT
+from core.observation.logger import get_logger
 
-from ..prompts.eval.conv_prompts import CONV_BOUNDARY_DETECTION_PROMPT as EVAL_CONV_BOUNDARY_DETECTION_PROMPT
-from .base_memcell_extractor import (
-    MemCellExtractor,
-    RawData,
-    MemCell,
-    StatusResult,
-    MemCellExtractRequest,
-)
+from ..llm.llm_provider import LLMProvider
 from ..memory_extractor.episode_memory_extractor import (
     EpisodeMemoryExtractor,
     EpisodeMemoryExtractRequest,
 )
-from core.observation.logger import get_logger
-from agentic_layer.vectorize_service import get_vectorize_service
+from ..prompts.eval.conv_prompts import (
+    CONV_BOUNDARY_DETECTION_PROMPT as EVAL_CONV_BOUNDARY_DETECTION_PROMPT,
+)
+from ..prompts.zh.conv_prompts import CONV_BOUNDARY_DETECTION_PROMPT
+from ..types import RawDataType
+from .base_memcell_extractor import (
+    MemCell,
+    MemCellExtractor,
+    MemCellExtractRequest,
+    RawData,
+    StatusResult,
+)
 
 logger = get_logger(__name__)
 
@@ -67,7 +71,7 @@ class ConvMemCellExtractor(MemCellExtractor):
         self.llm_provider = llm_provider
         self.use_eval_prompts = use_eval_prompts
         self.episode_extractor = EpisodeMemoryExtractor(llm_provider, use_eval_prompts)
-        
+
         if use_eval_prompts:
             self.conv_boundary_detection_prompt = EVAL_CONV_BOUNDARY_DETECTION_PROMPT
         else:
@@ -96,27 +100,26 @@ class ConvMemCellExtractor(MemCellExtractor):
         participant_ids = set()
 
         for raw_data in chat_raw_data_list:
-
             # 提取speaker_id
-            if 'speaker_id' in raw_data and raw_data['speaker_id']:
-                participant_ids.add(raw_data['speaker_id'])
+            if "speaker_id" in raw_data and raw_data["speaker_id"]:
+                participant_ids.add(raw_data["speaker_id"])
 
             # 提取referList中的所有ID
-            if 'referList' in raw_data and raw_data['referList']:
-                for refer_item in raw_data['referList']:
+            if "referList" in raw_data and raw_data["referList"]:
+                for refer_item in raw_data["referList"]:
                     # refer_item可能是字典格式，包含_id字段
                     if isinstance(refer_item, dict):
                         # 处理MongoDB ObjectId格式的_id
-                        if '_id' in refer_item:
-                            refer_id = refer_item['_id']
+                        if "_id" in refer_item:
+                            refer_id = refer_item["_id"]
                             # 如果是ObjectId对象，转换为字符串
-                            if hasattr(refer_id, '__str__'):
+                            if hasattr(refer_id, "__str__"):
                                 participant_ids.add(str(refer_id))
                             else:
                                 participant_ids.add(refer_id)
                         # 也检查普通的id字段
-                        elif 'id' in refer_item:
-                            participant_ids.add(refer_item['id'])
+                        elif "id" in refer_item:
+                            participant_ids.add(refer_item["id"])
                     # 如果refer_item直接是ID字符串
                     elif isinstance(refer_item, str):
                         participant_ids.add(refer_item)
@@ -283,7 +286,7 @@ class ConvMemCellExtractor(MemCellExtractor):
                     )
                 break
             except Exception as e:
-                print('retry: ', i)
+                print("retry: ", i)
                 if i == 4:
                     raise Exception("Boundary detection failed")
                 continue
@@ -343,7 +346,7 @@ class ConvMemCellExtractor(MemCellExtractor):
         if should_end:
             # TODO 重构专项：转为int逻辑不对 应该保持为datetime
             ts_value = history_message_dict_list[-1].get("timestamp")
-            
+
             if isinstance(ts_value, str):
                 # 统一解析为带时区的 datetime
                 timestamp = dt_from_iso_format(ts_value.replace("Z", "+00:00"))
@@ -351,7 +354,6 @@ class ConvMemCellExtractor(MemCellExtractor):
                 timestamp = dt_from_timestamp(ts_value)
             else:
                 timestamp = get_now_with_timezone()
-        
 
             participants = self._extract_participant_ids(history_message_dict_list)
             # 创建 MemCell
@@ -363,7 +365,9 @@ class ConvMemCellExtractor(MemCellExtractor):
                     fallback_text = last_msg.get("content") or ""
                 elif isinstance(last_msg, str):
                     fallback_text = last_msg
-            summary_text = boundary_detection_result.topic_summary or (fallback_text.strip()[:200] if fallback_text else "会话片段")
+            summary_text = boundary_detection_result.topic_summary or (
+                fallback_text.strip()[:200] if fallback_text else "会话片段"
+            )
 
             memcell = MemCell(
                 event_id=str(uuid.uuid4()),
@@ -402,7 +406,7 @@ class ConvMemCellExtractor(MemCellExtractor):
                         # GROUP_EPISODE_GENERATION_PROMPT 模式：返回包含情景记忆的 MemCell
                         logger.info(f"✅ 成功生成情景记忆并存储到 MemCell 中")
                         # Attach embedding info to MemCell (episode preferred)
-                        
+
                         text_for_embed = (
                             episode_result.episode or episode_result.summary or ""
                         )
@@ -411,25 +415,19 @@ class ConvMemCellExtractor(MemCellExtractor):
                             vec = await vs.get_embedding(text_for_embed)
                             episode_result.extend = episode_result.extend or {}
                             episode_result.extend["embedding"] = (
-                                vec.tolist()
-                                if hasattr(vec, "tolist")
-                                else list(vec)
+                                vec.tolist() if hasattr(vec, "tolist") else list(vec)
                             )
-                            episode_result.extend["vector_model"] = (
-                                vs.get_model_name()
-                            )
+                            episode_result.extend["vector_model"] = vs.get_model_name()
 
-                        
-                        
                         # 提交到聚类器（如果存在）
-                        if hasattr(self, '_cluster_worker') and self._cluster_worker:
+                        if hasattr(self, "_cluster_worker") and self._cluster_worker:
                             try:
                                 self._cluster_worker.submit(
                                     request.group_id, episode_result.to_dict()
                                 )
                             except Exception as e:
                                 logger.debug(f"Failed to submit to cluster worker: {e}")
-                        
+
                         return (episode_result, status_control_result)
                     else:
                         logger.warning(
@@ -459,14 +457,14 @@ class ConvMemCellExtractor(MemCellExtractor):
                     memcell.extend["vector_model"] = vs.get_model_name()
             except Exception:
                 logger.debug("Embedding attach failed; continue without it")
-            
+
             # 提交到聚类器（如果存在）
-            if hasattr(self, '_cluster_worker') and self._cluster_worker:
+            if hasattr(self, "_cluster_worker") and self._cluster_worker:
                 try:
                     self._cluster_worker.submit(request.group_id, memcell.to_dict())
                 except Exception as e:
                     logger.debug(f"Failed to submit to cluster worker: {e}")
-            
+
             return (memcell, status_control_result)
         elif should_wait:
             logger.debug(f"⏳ Waiting for more messages: {reason}")
@@ -481,7 +479,7 @@ class ConvMemCellExtractor(MemCellExtractor):
         )
 
         # 获取消息类型
-        msg_type = content.get('msgType') if isinstance(content, dict) else None
+        msg_type = content.get("msgType") if isinstance(content, dict) else None
 
         # 定义支持的消息类型和对应的占位符
         SUPPORTED_MSG_TYPES = {
@@ -507,7 +505,7 @@ class ConvMemCellExtractor(MemCellExtractor):
             if placeholder is not None:
                 # 替换消息内容为占位符
                 content = content.copy()
-                content['content'] = placeholder
+                content["content"] = placeholder
                 logger.debug(
                     f"[ConvMemCellExtractor] 消息类型 {msg_type} 转换为占位符: {placeholder}"
                 )

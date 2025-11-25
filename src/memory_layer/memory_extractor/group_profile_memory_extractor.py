@@ -1,22 +1,23 @@
 """Group Profile Memory Extraction for EverMemOS."""
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from datetime import datetime
-from enum import Enum
 import hashlib
 import os
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from ..llm.llm_provider import LLMProvider
-from .base_memory_extractor import MemoryExtractor, MemoryExtractRequest
-from ..types import Memory, MemoryType
 from common_utils.datetime_utils import (
-    get_now_with_timezone,
-    from_timestamp,
     from_iso_format,
+    from_timestamp,
+    get_now_with_timezone,
     timezone,
 )
 from core.observation.logger import get_logger
+
+from ..llm.llm_provider import LLMProvider
+from ..types import Memory, MemoryType
+from .base_memory_extractor import MemoryExtractor, MemoryExtractRequest
 
 logger = get_logger(__name__)
 
@@ -114,7 +115,7 @@ class TopicInfo:
     ):
         """Create TopicInfo with generated or provided ID."""
         if not id:
-            topic_id = hashlib.md5(name.encode('utf-8')).hexdigest()[:8]
+            topic_id = hashlib.md5(name.encode("utf-8")).hexdigest()[:8]
             id = f"topic_{topic_id}"
         return cls(
             id=id,
@@ -258,9 +259,9 @@ class GroupProfileMemoryExtractor(MemoryExtractor):
             True if group should be filtered out (not processed), False otherwise
         """
         # 根据环境变量ENV控制过滤逻辑
-        env_value = os.getenv('IGNORE_GROUP_NAME_FILTER', '').lower()
+        env_value = os.getenv("IGNORE_GROUP_NAME_FILTER", "").lower()
 
-        if env_value == 'true':
+        if env_value == "true":
             # 如果ENV变量为true，则不过滤任何群组
             return False
         else:
@@ -336,7 +337,7 @@ class GroupProfileMemoryExtractor(MemoryExtractor):
             valid_memcell_ids = set(
                 str(mc.event_id)
                 for mc in memcell_list
-                if hasattr(mc, 'event_id') and mc.event_id
+                if hasattr(mc, "event_id") and mc.event_id
             )
             logger.debug(
                 f"[extract_memory] Valid memcell IDs count: {len(valid_memcell_ids)}"
@@ -389,7 +390,7 @@ class GroupProfileMemoryExtractor(MemoryExtractor):
                 user_id="",
                 timestamp=get_now_with_timezone(),
                 ori_event_id_list=[
-                    str(mc.event_id) for mc in memcell_list if hasattr(mc, 'event_id')
+                    str(mc.event_id) for mc in memcell_list if hasattr(mc, "event_id")
                 ],
                 group_id=group_id,
                 group_name=group_name,
@@ -414,14 +415,14 @@ class GroupProfileMemoryExtractor(MemoryExtractor):
 
 __all__ = [
     # 主类
-    'GroupProfileMemoryExtractor',
-    'GroupProfileMemoryExtractRequest',
+    "GroupProfileMemoryExtractor",
+    "GroupProfileMemoryExtractRequest",
     # 数据模型
-    'GroupProfileMemory',
-    'TopicInfo',
+    "GroupProfileMemory",
+    "TopicInfo",
     # 枚举
-    'GroupRole',
-    'TopicStatus',
+    "GroupRole",
+    "TopicStatus",
     # 工具函数
-    'convert_to_datetime',
+    "convert_to_datetime",
 ]

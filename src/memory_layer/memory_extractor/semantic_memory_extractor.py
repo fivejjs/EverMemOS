@@ -4,19 +4,21 @@
 """
 
 import json
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+from agentic_layer.vectorize_service import get_vectorize_service
+from core.observation.logger import get_logger
+
+from ..llm.llm_provider import LLMProvider
 
 # 使用动态语言提示词导入（根据 MEMORY_LANGUAGE 环境变量自动选择）
 from ..prompts import (
     get_group_semantic_generation_prompt,
     get_semantic_generation_prompt,
 )
-from ..llm.llm_provider import LLMProvider
+from ..types import MemCell, Memory, MemoryType, SemanticMemoryItem
 from .base_memory_extractor import MemoryExtractor, MemoryExtractRequest
-from ..types import MemoryType, MemCell, Memory, SemanticMemoryItem
-from agentic_layer.vectorize_service import get_vectorize_service
-from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -188,27 +190,30 @@ class SemanticMemoryExtractor(MemoryExtractor):
     @staticmethod
     def _clean_date_string(date_str: Optional[str]) -> Optional[str]:
         """清理日期字符串，移除非法字符
-        
+
         Args:
             date_str: 原始日期字符串
-            
+
         Returns:
             清理后的日期字符串，如果无效则返回 None
         """
         if not date_str or not isinstance(date_str, str):
             return None
-        
+
         import re
+
         # 只保留数字和连字符，移除其他字符（如中文、空格等）
-        cleaned = re.sub(r'[^\d\-]', '', date_str)
-        
+        cleaned = re.sub(r"[^\d\-]", "", date_str)
+
         # 验证格式是否为 YYYY-MM-DD
-        if re.match(r'^\d{4}-\d{2}-\d{2}$', cleaned):
+        if re.match(r"^\d{4}-\d{2}-\d{2}$", cleaned):
             return cleaned
         else:
-            logger.warning(f"时间格式无效，已清理但仍不符合 YYYY-MM-DD: 原始='{date_str}', 清理后='{cleaned}'")
+            logger.warning(
+                f"时间格式无效，已清理但仍不符合 YYYY-MM-DD: 原始='{date_str}', 清理后='{cleaned}'"
+            )
             return None
-    
+
     async def _parse_semantic_memories_response(
         self,
         response: str,
@@ -228,9 +233,9 @@ class SemanticMemoryExtractor(MemoryExtractor):
         """
         try:
             # 首先尝试提取代码块中的JSON
-            if '```json' in response:
-                start = response.find('```json') + 7
-                end = response.find('```', start)
+            if "```json" in response:
+                start = response.find("```json") + 7
+                end = response.find("```", start)
                 if end > start:
                     json_str = response[start:end].strip()
                     data = json.loads(json_str)
@@ -245,15 +250,14 @@ class SemanticMemoryExtractor(MemoryExtractor):
                 semantic_memories = []
 
                 for item in data:
-                    
-                    content = item.get('content', '')
-                    evidence = item.get('evidence', '')  # ← 读取 evidence
+                    content = item.get("content", "")
+                    evidence = item.get("evidence", "")  # ← 读取 evidence
 
                     # 使用传入的start_time或LLM提供的时间
-                    item_start_time = item.get('start_time', start_time)
-                    item_end_time = item.get('end_time')
-                    item_duration_days = item.get('duration_days')
-                    
+                    item_start_time = item.get("start_time", start_time)
+                    item_end_time = item.get("end_time")
+                    item_duration_days = item.get("duration_days")
+
                     # 清理时间格式（防止 LLM 输出错误的格式）
                     item_start_time = self._clean_date_string(item_start_time)
                     item_end_time = self._clean_date_string(item_end_time)
@@ -282,13 +286,12 @@ class SemanticMemoryExtractor(MemoryExtractor):
                         end_time=item_end_time,
                         duration_days=item_duration_days,
                         source_episode_id=item.get(
-                            'source_episode_id', source_episode_id
+                            "source_episode_id", source_episode_id
                         ),
                         embedding=vec.tolist(),
                     )
 
                     semantic_memories.append(memory_item)
-                    
 
                 return semantic_memories
             else:
@@ -313,7 +316,7 @@ class SemanticMemoryExtractor(MemoryExtractor):
         Returns:
             开始时间字符串，格式为YYYY-MM-DD
         """
-        return timestamp.strftime('%Y-%m-%d')
+        return timestamp.strftime("%Y-%m-%d")
 
     def _calculate_end_time_from_duration(
         self, start_time: str, duration_days: int
@@ -332,10 +335,10 @@ class SemanticMemoryExtractor(MemoryExtractor):
             if not start_time or duration_days is None:
                 return None
 
-            start_date = datetime.strptime(start_time, '%Y-%m-%d')
+            start_date = datetime.strptime(start_time, "%Y-%m-%d")
             end_date = start_date + timedelta(days=duration_days)
 
-            return end_date.strftime('%Y-%m-%d')
+            return end_date.strftime("%Y-%m-%d")
 
         except Exception as e:
             logger.error(f"根据持续时间计算结束时间时出错: {e}")
@@ -356,8 +359,8 @@ class SemanticMemoryExtractor(MemoryExtractor):
             if not start_time or not end_time:
                 return None
 
-            start_date = datetime.strptime(start_time, '%Y-%m-%d')
-            end_date = datetime.strptime(end_time, '%Y-%m-%d')
+            start_date = datetime.strptime(start_time, "%Y-%m-%d")
+            end_date = datetime.strptime(end_time, "%Y-%m-%d")
 
             duration = end_date - start_date
             return duration.days

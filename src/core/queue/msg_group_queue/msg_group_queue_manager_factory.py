@@ -6,11 +6,13 @@
 参考 mongodb_client_factory.py 的设计模式。
 """
 
-import os
 import asyncio
+import os
 from typing import Dict, Optional
+
 from core.di.decorators import component
 from core.observation.logger import get_logger
+
 from .msg_group_queue_manager import MsgGroupQueueManager
 
 logger = get_logger(__name__)
@@ -44,7 +46,7 @@ class MsgGroupQueueConfig:
         return f"{self.name}:{self.num_queues}:{self.max_total_messages}:{self.enable_metrics}:{self.log_interval_seconds}"
 
     @classmethod
-    def from_env(cls, prefix: str = "") -> 'MsgGroupQueueConfig':
+    def from_env(cls, prefix: str = "") -> "MsgGroupQueueConfig":
         """
         从环境变量创建配置
 

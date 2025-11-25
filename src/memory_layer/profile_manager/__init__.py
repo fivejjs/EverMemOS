@@ -11,7 +11,7 @@ Key Features:
 
 Usage:
     from memory_layer.profile_manager import ProfileManager, ProfileManagerConfig
-    
+
     # Initialize
     config = ProfileManagerConfig(
         scenario="group_chat",  # or "assistant"
@@ -19,11 +19,11 @@ Usage:
         enable_versioning=True
     )
     profile_mgr = ProfileManager(llm_provider, config)
-    
+
     # Attach to memcell extractor
     memcell_extractor = ConvMemCellExtractor(llm_provider)
     profile_mgr.attach_to_extractor(memcell_extractor)
-    
+
     # Profiles are now automatically extracted and updated!
     # Access latest profiles:
     user_profile = profile_mgr.get_profile(user_id)
@@ -31,16 +31,16 @@ Usage:
 """
 
 from memory_layer.profile_manager.config import ProfileManagerConfig, ScenarioType
-from memory_layer.profile_manager.manager import ProfileManager
 from memory_layer.profile_manager.discriminator import (
-    ValueDiscriminator,
     DiscriminatorConfig,
+    ValueDiscriminator,
 )
-from memory_layer.profile_manager.storage import (
-    ProfileStorage,
-    InMemoryProfileStorage,
-)
+from memory_layer.profile_manager.manager import ProfileManager
 from memory_layer.profile_manager.mongo_profile_storage import MongoProfileStorage
+from memory_layer.profile_manager.storage import (
+    InMemoryProfileStorage,
+    ProfileStorage,
+)
 
 __all__ = [
     "ProfileManager",
@@ -52,4 +52,3 @@ __all__ = [
     "InMemoryProfileStorage",
     "MongoProfileStorage",
 ]
-

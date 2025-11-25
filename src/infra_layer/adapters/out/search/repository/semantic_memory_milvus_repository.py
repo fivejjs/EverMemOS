@@ -6,16 +6,17 @@
 支持个人语义记忆和群组语义记忆。
 """
 
-from datetime import datetime
-from typing import List, Optional, Dict, Any
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from common_utils.datetime_utils import get_now_with_timezone
+from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.milvus.base_repository import BaseMilvusRepository
 from infra_layer.adapters.out.search.milvus.memory.semantic_memory_collection import (
     SemanticMemoryCollection,
 )
-from core.observation.logger import get_logger
-from common_utils.datetime_utils import get_now_with_timezone
-from core.di.decorators import repository
 
 logger = get_logger(__name__)
 
@@ -24,9 +25,7 @@ MILVUS_SIMILARITY_RADIUS = None  # COSINE 相似度阈值，可选范围 [-1, 1]
 
 
 @repository("semantic_memory_milvus_repository", primary=False)
-class SemanticMemoryMilvusRepository(
-    BaseMilvusRepository[SemanticMemoryCollection]
-):
+class SemanticMemoryMilvusRepository(BaseMilvusRepository[SemanticMemoryCollection]):
     """
     语义记忆 Milvus 仓库
 
@@ -35,7 +34,7 @@ class SemanticMemoryMilvusRepository(
     - 相似性搜索和过滤功能
     - 文档创建和管理
     - 向量索引管理
-    
+
     同时支持个人语义记忆和群组语义记忆。
     """
 
@@ -146,7 +145,9 @@ class SemanticMemoryMilvusRepository(
             }
 
         except Exception as e:
-            logger.error("❌ 创建个人语义记忆文档失败: memory_id=%s, error=%s", memory_id, e)
+            logger.error(
+                "❌ 创建个人语义记忆文档失败: memory_id=%s, error=%s", memory_id, e
+            )
             raise
 
     # ==================== 搜索功能 ====================
@@ -218,12 +219,14 @@ class SemanticMemoryMilvusRepository(
             ef_value = max(128, limit * 2)  # 确保 ef >= limit，至少 128
             # 使用 COSINE 相似度，radius 表示只返回相似度 >= 阈值的结果
             # 优先使用传入的 radius 参数，否则使用默认配置
-            similarity_radius = radius if radius is not None else MILVUS_SIMILARITY_RADIUS
+            similarity_radius = (
+                radius if radius is not None else MILVUS_SIMILARITY_RADIUS
+            )
             search_params = {
                 "metric_type": "COSINE",
                 "params": {
                     "ef": ef_value,
-                }
+                },
             }
             if similarity_radius is not None:
                 search_params["params"]["radius"] = similarity_radius  # 相似度阈值
@@ -244,16 +247,12 @@ class SemanticMemoryMilvusRepository(
                     if hit.score >= score_threshold:
                         # 解析元数据
                         metadata_json = hit.entity.get("metadata", "{}")
-                        metadata = (
-                            json.loads(metadata_json) if metadata_json else {}
-                        )
+                        metadata = json.loads(metadata_json) if metadata_json else {}
 
                         # 解析 search_content（统一为 JSON 数组格式）
                         search_content_raw = hit.entity.get("search_content", "[]")
                         search_content = (
-                            json.loads(search_content_raw)
-                            if search_content_raw
-                            else []
+                            json.loads(search_content_raw) if search_content_raw else []
                         )
 
                         # 构建结果
@@ -299,7 +298,9 @@ class SemanticMemoryMilvusRepository(
         try:
             success = await super().delete_by_id(memory_id)
             if success:
-                logger.debug("✅ 根据memory_id删除语义记忆成功: memory_id=%s", memory_id)
+                logger.debug(
+                    "✅ 根据memory_id删除语义记忆成功: memory_id=%s", memory_id
+                )
             return success
         except Exception as e:
             logger.error(
@@ -331,7 +332,8 @@ class SemanticMemoryMilvusRepository(
                 await self.collection.delete(expr)
 
             logger.debug(
-                "✅ 根据parent_episode_id删除语义记忆成功: 删除了 %d 条记录", delete_count
+                "✅ 根据parent_episode_id删除语义记忆成功: 删除了 %d 条记录",
+                delete_count,
             )
             return delete_count
 
@@ -395,4 +397,3 @@ class SemanticMemoryMilvusRepository(
         except Exception as e:
             logger.error("❌ 根据过滤条件批量删除语义记忆失败: %s", e)
             raise
-

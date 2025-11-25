@@ -5,10 +5,11 @@
 提供了与 EpisodicMemoryMilvusRepository 兼容的 Schema 定义和索引配置。
 """
 
-from pymilvus import DataType, FieldSchema, CollectionSchema
+from pymilvus import CollectionSchema, DataType, FieldSchema
+
 from core.oxm.milvus.milvus_collection_base import (
-    MilvusCollectionWithSuffix,
     IndexConfig,
+    MilvusCollectionWithSuffix,
 )
 
 
@@ -114,7 +115,8 @@ class EpisodicMemoryCollection(MilvusCollectionWithSuffix):
         ),
         # 标量字段索引（用于过滤）
         IndexConfig(
-            field_name="user_id", index_type="AUTOINDEX"  # 自动选择最适合的索引类型
+            field_name="user_id",
+            index_type="AUTOINDEX",  # 自动选择最适合的索引类型
         ),
         IndexConfig(field_name="group_id", index_type="AUTOINDEX"),
         IndexConfig(field_name="event_type", index_type="AUTOINDEX"),

@@ -5,18 +5,20 @@
 主要功能包括多词搜索、过滤查询和文档管理。
 """
 
-from datetime import datetime
 import pprint
-from typing import List, Optional, Dict, Any
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from elasticsearch.dsl import Q
+
+from common_utils.datetime_utils import get_now_with_timezone
+from common_utils.text_utils import SmartTextParser
+from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.es.base_repository import BaseRepository
 from infra_layer.adapters.out.search.elasticsearch.memory.episodic_memory import (
     EpisodicMemoryDoc,
 )
-from core.observation.logger import get_logger
-from common_utils.datetime_utils import get_now_with_timezone
-from common_utils.text_utils import SmartTextParser
-from core.di.decorators import repository
 
 logger = get_logger(__name__)
 
@@ -137,17 +139,17 @@ class EpisodicMemoryEsRepository(BaseRepository[EpisodicMemoryDoc]):
                 event_id=event_id,
                 type=event_type,
                 user_id=normalized_user_id,
-                user_name=user_name or '',
+                user_name=user_name or "",
                 timestamp=timestamp,
-                title=title or '',
+                title=title or "",
                 episode=episode,
                 search_content=search_content,
-                summary=summary or '',
+                summary=summary or "",
                 group_id=group_id,
                 participants=participants or [],
                 keywords=keywords or [],
                 linked_entities=linked_entities or [],
-                subject=subject or '',
+                subject=subject or "",
                 memcell_event_id_list=memcell_event_id_list or [],
                 extend=extend or {},
                 created_at=created_at,
@@ -352,7 +354,9 @@ class EpisodicMemoryEsRepository(BaseRepository[EpisodicMemoryDoc]):
 
                 search_body = search.to_dict()
                 search_response = await client.search(
-                    index=index_name, body=search_body, explain=True  # 添加explain参数
+                    index=index_name,
+                    body=search_body,
+                    explain=True,  # 添加explain参数
                 )
 
                 # 转换为标准格式并输出explanation
@@ -571,7 +575,7 @@ class EpisodicMemoryEsRepository(BaseRepository[EpisodicMemoryDoc]):
                 index=index_name, body={"query": delete_query}, refresh=refresh
             )
 
-            deleted_count = response.get('deleted', 0)
+            deleted_count = response.get("deleted", 0)
 
             logger.debug(
                 "✅ 根据过滤条件批量删除情景记忆成功: user_id=%s, group_id=%s, 删除了 %d 条记录",

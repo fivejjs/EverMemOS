@@ -1,6 +1,7 @@
-from typing import Dict, Any
-from abc import ABC, abstractmethod
 import uuid
+from abc import ABC, abstractmethod
+from typing import Any, Dict
+
 from fastapi import Request
 
 from core.di.decorators import component
@@ -44,11 +45,11 @@ class AppInfoProviderImpl(AppInfoProvider):
         app_info = {}
 
         # 从请求头中获取trace_id，如果不存在则生成新的
-        trace_id = request.headers.get('x-trace-id')
+        trace_id = request.headers.get("x-trace-id")
         if not trace_id:
             trace_id = str(uuid.uuid4())
 
         # 设置trace_id到app_info中
-        app_info['trace_id'] = trace_id
+        app_info["trace_id"] = trace_id
 
         return app_info

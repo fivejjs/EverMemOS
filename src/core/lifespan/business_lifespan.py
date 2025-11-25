@@ -2,14 +2,16 @@
 业务生命周期提供者实现
 """
 
-from fastapi import FastAPI
-from typing import Dict, Any
+from typing import Any, Dict
 
-from core.observation.logger import get_logger
-from core.di.utils import get_beans_by_type
-from core.di.decorators import component
-from core.interface.controller.base_controller import BaseController
+from fastapi import FastAPI
+
 from core.capability.app_capability import ApplicationCapability
+from core.di.decorators import component
+from core.di.utils import get_beans_by_type
+from core.interface.controller.base_controller import BaseController
+from core.observation.logger import get_logger
+
 from .lifespan_interface import LifespanProvider
 
 logger = get_logger(__name__)
@@ -53,9 +55,9 @@ class BusinessLifespanProvider(LifespanProvider):
         logger.info("业务应用初始化完成")
 
         return {
-            'graphs': graphs,
-            'controllers': controllers,
-            'capabilities': capabilities,
+            "graphs": graphs,
+            "controllers": controllers,
+            "capabilities": capabilities,
         }
 
     async def shutdown(self, app: FastAPI) -> None:
@@ -68,8 +70,8 @@ class BusinessLifespanProvider(LifespanProvider):
         logger.info("正在关闭业务逻辑...")
 
         # 清理app.state中的业务相关属性
-        if hasattr(app.state, 'graphs'):
-            delattr(app.state, 'graphs')
+        if hasattr(app.state, "graphs"):
+            delattr(app.state, "graphs")
 
         logger.info("业务应用关闭完成")
 
@@ -99,7 +101,7 @@ class BusinessLifespanProvider(LifespanProvider):
 
     def _register_graphs(self, app: FastAPI) -> dict:
         """注册所有图结构到FastAPI应用"""
-        checkpointer = getattr(app.state, 'checkpointer', None)
+        checkpointer = getattr(app.state, "checkpointer", None)
         if not checkpointer:
             logger.warning("未找到checkpointer，跳过图结构创建")
             return {}

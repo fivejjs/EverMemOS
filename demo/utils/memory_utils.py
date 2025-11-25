@@ -16,19 +16,19 @@ V4 更新：
 
 import json
 import os
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from demo.config import MongoDBConfig
 
 # 导入项目中的文档模型
 from infra_layer.adapters.out.persistence.document.memory.memcell import (
     MemCell as DocMemCell,
 )
-from demo.config import MongoDBConfig
-
 
 # ============================================================================
 # Prompt 语言设置
@@ -37,13 +37,13 @@ from demo.config import MongoDBConfig
 
 def set_prompt_language(language: str) -> None:
     """设置记忆提取的 Prompt 语言
-    
+
     通过设置环境变量 MEMORY_LANGUAGE 来控制 src/memory_layer/prompts 使用的语言。
     这会影响所有记忆提取器（MemCell、Profile、Episode、Semantic）使用的 Prompt。
-    
+
     Args:
         language: 语言代码，"zh" 或 "en"
-        
+
     注意：
         - 必须在导入 memory_layer 相关模块之前调用
         - 建议在程序启动时立即调用
@@ -51,14 +51,14 @@ def set_prompt_language(language: str) -> None:
     if language not in ["zh", "en"]:
         print(f"[Warning] 不支持的语言 '{language}'，将使用默认语言 'en'")
         language = "en"
-    
+
     os.environ["MEMORY_LANGUAGE"] = language
     print(f"[Prompt Language] 已设置为: {language} (影响所有记忆提取 Prompt)")
 
 
 def get_prompt_language() -> str:
     """获取当前的 Prompt 语言设置
-    
+
     Returns:
         当前的 MEMORY_LANGUAGE 环境变量值，默认为 "en"
     """
@@ -85,7 +85,7 @@ async def ensure_mongo_beanie_ready(mongo_config: MongoDBConfig) -> None:
     # 创建 MongoDB 客户端并测试连接
     client = AsyncIOMotorClient(mongo_config.uri)
     try:
-        await client.admin.command('ping')
+        await client.admin.command("ping")
         print(f"[MongoDB] ✅ 连接成功: {mongo_config.database}")
     except Exception as e:
         print(f"[MongoDB] ❌ 连接失败: {e}")
@@ -176,9 +176,8 @@ def serialize_datetime(obj: Any) -> Any:
     elif isinstance(obj, list):
         return [serialize_datetime(item) for item in obj]
     # 处理对象（转换 __dict__）
-    elif hasattr(obj, '__dict__'):
+    elif hasattr(obj, "__dict__"):
         return serialize_datetime(obj.__dict__)
     # 其他类型直接返回
     else:
         return obj
-

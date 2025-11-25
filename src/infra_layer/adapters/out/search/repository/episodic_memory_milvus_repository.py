@@ -5,16 +5,17 @@
 主要功能包括向量存储、相似性搜索、过滤查询和文档管理。
 """
 
-from datetime import datetime
-from typing import List, Optional, Dict, Any, Union
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
+
+from common_utils.datetime_utils import get_now_with_timezone
+from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.milvus.base_repository import BaseMilvusRepository
 from infra_layer.adapters.out.search.milvus.memory.episodic_memory_collection import (
     EpisodicMemoryCollection,
 )
-from core.observation.logger import get_logger
-from common_utils.datetime_utils import get_now_with_timezone
-from core.di.decorators import repository
 
 logger = get_logger(__name__)
 
@@ -115,7 +116,8 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
                     "extend": extend or {},
                     "created_at": created_at.isoformat(),
                     "updated_at": updated_at.isoformat(),
-                    "parent_event_id": parent_event_id or "",  # 父事件ID，用于关联拆分的记录
+                    "parent_event_id": parent_event_id
+                    or "",  # 父事件ID，用于关联拆分的记录
                 }
                 metadata_json = json.dumps(metadata_dict, ensure_ascii=False)
             else:
@@ -211,9 +213,9 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             if event_type:
                 filter_expr.append(f'event_type == "{event_type}"')
             if start_time:
-                filter_expr.append(f'timestamp >= {int(start_time.timestamp())}')
+                filter_expr.append(f"timestamp >= {int(start_time.timestamp())}")
             if end_time:
-                filter_expr.append(f'timestamp <= {int(end_time.timestamp())}')
+                filter_expr.append(f"timestamp <= {int(end_time.timestamp())}")
 
             filter_str = " and ".join(filter_expr) if filter_expr else None
 
@@ -224,12 +226,14 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             ef_value = max(128, limit * 2)  # 确保 ef >= limit，至少 128
             # 使用 COSINE 相似度，radius 表示只返回相似度 >= 阈值的结果
             # 优先使用传入的 radius 参数，否则使用默认配置
-            similarity_radius = radius if radius is not None else MILVUS_SIMILARITY_RADIUS
+            similarity_radius = (
+                radius if radius is not None else MILVUS_SIMILARITY_RADIUS
+            )
             search_params = {
                 "metric_type": "COSINE",
                 "params": {
                     "ef": ef_value,
-                }
+                },
             }
             if similarity_radius is not None:
                 search_params["params"]["radius"] = similarity_radius
@@ -254,7 +258,9 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
 
                         # 解析 search_content（统一为 JSON 数组格式）
                         search_content_raw = hit.entity.get("search_content", "[]")
-                        search_content = json.loads(search_content_raw) if search_content_raw else []
+                        search_content = (
+                            json.loads(search_content_raw) if search_content_raw else []
+                        )
 
                         result = {
                             "id": hit.entity.get("id"),
@@ -328,9 +334,9 @@ class EpisodicMemoryMilvusRepository(BaseMilvusRepository[EpisodicMemoryCollecti
             if group_id:
                 filter_expr.append(f'group_id == "{group_id}"')
             if start_time:
-                filter_expr.append(f'timestamp >= {int(start_time.timestamp())}')
+                filter_expr.append(f"timestamp >= {int(start_time.timestamp())}")
             if end_time:
-                filter_expr.append(f'timestamp <= {int(end_time.timestamp())}')
+                filter_expr.append(f"timestamp <= {int(end_time.timestamp())}")
 
             if not filter_expr:
                 raise ValueError("至少需要提供一个过滤条件")

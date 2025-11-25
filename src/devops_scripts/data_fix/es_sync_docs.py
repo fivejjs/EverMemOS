@@ -1,11 +1,11 @@
 import argparse
 import asyncio
 import traceback
+
 from elasticsearch.dsl import AsyncDocument
 
 from core.observation.logger import get_logger
 from core.oxm.es.migration.utils import find_document_class_by_index_name
-
 
 logger = get_logger(__name__)
 

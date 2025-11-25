@@ -1,23 +1,24 @@
-import os
-import uuid
 import importlib
+import os
 import pkgutil
-from pathlib import Path
-from typing import Any, Dict, Optional, List, Callable, Union
+import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union
 
-from arq import create_pool, ArqRedis
+from arq import ArqRedis, create_pool
 from arq.connections import RedisSettings
 from arq.jobs import Job
-from arq.worker import Worker, Function, func as arq_func
+from arq.worker import Function, Worker
+from arq.worker import func as arq_func
 
-from core.context.context_manager import ContextManager
+from core.authorize.enums import Role
 from core.context.context import get_current_user_info
+from core.context.context_manager import ContextManager
 from core.di.decorators import component
 from core.observation.logger import get_logger
-from core.authorize.enums import Role
 
 logger = get_logger(__name__)
 
@@ -197,7 +198,7 @@ class TaskManager:
                 package = importlib.import_module(package_name)
 
                 # 扫描包中的所有模块
-                if hasattr(package, '__path__'):
+                if hasattr(package, "__path__"):
                     # 这是一个包，递归扫描所有子模块
                     for _, module_name, _ in pkgutil.walk_packages(
                         package.__path__, prefix=f"{package_name}."
@@ -228,7 +229,7 @@ class TaskManager:
             # 获取模块中的所有属性
             for attr_name in dir(module):
                 # 跳过私有属性和特殊属性
-                if attr_name.startswith('_'):
+                if attr_name.startswith("_"):
                     continue
 
                 try:
@@ -604,7 +605,6 @@ def task(retry_config: Optional[RetryConfig] = None, timeout: Optional[float] = 
     task_manager = get_task_manager()
 
     def decorator(func: Callable) -> Callable:
-
         async def _task_wrapper(*args, **kwargs):
             return await task_manager.execute_task_with_context(func, *args, **kwargs)
 

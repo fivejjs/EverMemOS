@@ -6,16 +6,18 @@ Elasticsearch 基础仓库类
 """
 
 from abc import ABC
-from typing import Optional, TypeVar, Generic, Type, List, Dict, Any
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+
 from elasticsearch import AsyncElasticsearch
-from core.oxm.es.doc_base import DocBase
-from core.observation.logger import get_logger
+
 from core.di.utils import get_bean
+from core.observation.logger import get_logger
+from core.oxm.es.doc_base import DocBase
 
 logger = get_logger(__name__)
 
 # 泛型类型变量
-T = TypeVar('T', bound=DocBase)
+T = TypeVar("T", bound=DocBase)
 
 
 class BaseRepository(ABC, Generic[T]):
@@ -70,7 +72,7 @@ class BaseRepository(ABC, Generic[T]):
         Returns:
             str: 索引别名
         """
-        if hasattr(self.model, '_index') and hasattr(self.model._index, '_name'):
+        if hasattr(self.model, "_index") and hasattr(self.model._index, "_name"):
             return self.model._index._name
         raise ValueError(f"文档类 {self.model_name} 没有正确的索引配置")
 
@@ -93,7 +95,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.debug(
                 "✅ 创建文档成功 [%s]: %s",
                 self.model_name,
-                getattr(document, 'meta', {}).get('id', 'unknown'),
+                getattr(document, "meta", {}).get("id", "unknown"),
             )
             return document
         except Exception as e:
@@ -131,7 +133,7 @@ class BaseRepository(ABC, Generic[T]):
         try:
             client = await self.get_client()
             await document.save(using=client, refresh=refresh)
-            doc_id = getattr(getattr(document, 'meta', None), 'id', 'unknown')
+            doc_id = getattr(getattr(document, "meta", None), "id", "unknown")
             logger.debug("✅ 更新文档成功 [%s]: %s", self.model_name, doc_id)
             return document
         except Exception as e:
@@ -178,7 +180,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.debug(
                 "✅ 删除文档成功 [%s]: %s",
                 self.model_name,
-                getattr(document, 'meta', {}).get('id', 'unknown'),
+                getattr(document, "meta", {}).get("id", "unknown"),
             )
             return True
         except Exception as e:
@@ -248,7 +250,7 @@ class BaseRepository(ABC, Generic[T]):
             logger.debug(
                 "✅ 搜索执行成功 [%s]: 找到 %d 条结果",
                 self.model_name,
-                response.get('hits', {}).get('total', {}).get('value', 0),
+                response.get("hits", {}).get("total", {}).get("value", 0),
             )
             return response
         except Exception as e:
@@ -272,9 +274,9 @@ class BaseRepository(ABC, Generic[T]):
             )
 
             documents = []
-            for hit in response.get('hits', {}).get('hits', []):
-                doc = self.model.from_dict(hit['_source'])
-                doc.meta.id = hit['_id']
+            for hit in response.get("hits", {}).get("hits", []):
+                doc = self.model.from_dict(hit["_source"])
+                doc.meta.id = hit["_id"]
                 documents.append(doc)
 
             return documents
@@ -341,7 +343,7 @@ class BaseRepository(ABC, Generic[T]):
             client = await self.get_client()
 
             # 使用文档类的 init 方法创建索引
-            if hasattr(self.model, 'dest'):
+            if hasattr(self.model, "dest"):
                 index_name = self.model.dest()
             else:
                 from common_utils.datetime_utils import get_now_with_timezone

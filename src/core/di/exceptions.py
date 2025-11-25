@@ -3,7 +3,7 @@
 依赖注入系统异常类定义
 """
 
-from typing import Type, Any, List
+from typing import Any, List, Type
 
 
 class DIException(Exception):

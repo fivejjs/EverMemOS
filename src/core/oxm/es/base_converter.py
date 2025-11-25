@@ -6,14 +6,15 @@ Elasticsearch 文档转换器基类
 """
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Type, Any, get_args, get_origin
-from core.oxm.es.doc_base import DocBase
+from typing import Any, Generic, Type, TypeVar, get_args, get_origin
+
 from core.observation.logger import get_logger
+from core.oxm.es.doc_base import DocBase
 
 logger = get_logger(__name__)
 
 # 泛型类型变量 - 只限制ES文档类型
-EsDocType = TypeVar('EsDocType', bound=DocBase)
+EsDocType = TypeVar("EsDocType", bound=DocBase)
 
 
 class BaseEsConverter(ABC, Generic[EsDocType]):
@@ -39,7 +40,7 @@ class BaseEsConverter(ABC, Generic[EsDocType]):
             Type[EsDocType]: ES文档模型类
         """
         # 获取类的泛型基类
-        if hasattr(cls, '__orig_bases__'):
+        if hasattr(cls, "__orig_bases__"):
             for base in cls.__orig_bases__:
                 if get_origin(base) is BaseEsConverter:
                     args = get_args(base)

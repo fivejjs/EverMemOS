@@ -263,4 +263,3 @@ def get_semantic_generation_prompt(
 
 """
     return prompt
-

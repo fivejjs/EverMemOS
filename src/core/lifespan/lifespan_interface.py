@@ -5,8 +5,9 @@ FastAPI生命周期接口定义
 """
 
 from abc import ABC, abstractmethod
-from fastapi import FastAPI
 from typing import Any
+
+from fastapi import FastAPI
 
 from core.observation.logger import get_logger
 

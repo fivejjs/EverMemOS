@@ -44,4 +44,3 @@ Missing Info: {missing_info}
 
 Refined Query:
 """
-

@@ -68,4 +68,3 @@ Output:
 
 Now evaluate:
 """
-

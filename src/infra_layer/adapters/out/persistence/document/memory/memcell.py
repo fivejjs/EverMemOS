@@ -5,15 +5,15 @@ MemCell Beanie ODM 模型
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict
 from enum import Enum
+from typing import Dict, List, Optional
 
-from beanie import Indexed
-from core.oxm.mongo.document_base import DocumentBase
-from pydantic import BaseModel, Field, ConfigDict
-from pymongo import IndexModel, ASCENDING, DESCENDING
-from beanie import PydanticObjectId
+from beanie import Indexed, PydanticObjectId
+from pydantic import BaseModel, ConfigDict, Field
+from pymongo import ASCENDING, DESCENDING, IndexModel
+
 from core.oxm.mongo.audit_base import AuditBase
+from core.oxm.mongo.document_base import DocumentBase
 
 
 class DataTypeEnum(str, Enum):
@@ -72,7 +72,9 @@ class MemCell(DocumentBase, AuditBase):
     """
 
     # 核心字段（必填）
-    user_id: Optional[Indexed(str)] = Field(None, description="用户ID，核心查询字段。群组记忆时为None，个人记忆时为用户ID")
+    user_id: Optional[Indexed(str)] = Field(
+        None, description="用户ID，核心查询字段。群组记忆时为None，个人记忆时为用户ID"
+    )
     timestamp: Indexed(datetime) = Field(..., description="发生时间，分片键")
     summary: str = Field(..., min_length=1, description="记忆单元摘要")
 
@@ -174,7 +176,7 @@ class MemCell(DocumentBase, AuditBase):
             # 7. 群组类型查询复合索引 - 群组数据类型过滤场景优化
             IndexModel(
                 [
-                    ('group_id', ASCENDING),
+                    ("group_id", ASCENDING),
                     ("type", ASCENDING),
                     ("timestamp", DESCENDING),
                 ],

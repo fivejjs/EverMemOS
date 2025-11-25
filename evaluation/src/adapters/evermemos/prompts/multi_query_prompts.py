@@ -118,4 +118,3 @@ Output:
 Now generate the queries:
 
 """
-

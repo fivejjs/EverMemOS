@@ -6,22 +6,21 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Union, Optional
+import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 from zoneinfo import ZoneInfo
 
 from infra_layer.adapters.input.format_transfer import (
     convert_conversation_to_raw_data_list,
 )
-
-from .schemas import DataFields
-from .memory_models import MemoryType
-from .dtos.memory_query import RetrieveMemRequest, FetchMemRequest
+from memory_layer.memcell_extractor.base_memcell_extractor import RawData
 from memory_layer.memory_manager import MemorizeRequest
 from memory_layer.types import RawDataType
-from memory_layer.memcell_extractor.base_memcell_extractor import RawData
 
-import logging
+from .dtos.memory_query import FetchMemRequest, RetrieveMemRequest
+from .memory_models import MemoryType
+from .schemas import DataFields
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +128,7 @@ def _extract_current_time(data: Dict[str, Any]) -> Optional[datetime]:
     current_time_str = data["current_time"]
     if isinstance(current_time_str, str):
         try:
-            return datetime.fromisoformat(current_time_str.replace('Z', '+00:00'))
+            return datetime.fromisoformat(current_time_str.replace("Z", "+00:00"))
         except ValueError:
             logger.warning(f"无法解析 current_time: {current_time_str}")
             return None
@@ -177,12 +176,12 @@ def _create_memorize_request(
     # 如果 current_time 为 None，尝试从 new_data[0] 的 timestamp 或 updateTime 来获取
     if current_time is None and new_data and new_data[0] is not None:
         first_data = new_data[0]
-        if hasattr(first_data, 'content') and first_data.content:
+        if hasattr(first_data, "content") and first_data.content:
             # 优先使用 updateTime
-            if 'updateTime' in first_data.content and first_data.content['updateTime']:
-                current_time = first_data.content['updateTime']
-            elif 'timestamp' in first_data.content and first_data.content['timestamp']:
-                current_time = first_data.content['timestamp']
+            if "updateTime" in first_data.content and first_data.content["updateTime"]:
+                current_time = first_data.content["updateTime"]
+            elif "timestamp" in first_data.content and first_data.content["timestamp"]:
+                current_time = first_data.content["timestamp"]
 
     return MemorizeRequest(
         history_raw_data_list=history_data,

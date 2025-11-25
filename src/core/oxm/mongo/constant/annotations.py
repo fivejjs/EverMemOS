@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from core.class_annotations.types import StringEnumAnnotationKey, StringEnumAnnotation
+from core.class_annotations.types import StringEnumAnnotation, StringEnumAnnotationKey
 
 
 class ClassAnnotationKey(StringEnumAnnotationKey):

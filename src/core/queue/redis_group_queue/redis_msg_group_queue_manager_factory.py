@@ -6,14 +6,16 @@ Redis消息分组队列管理器工厂
 参考 mongodb_client_factory.py 的设计模式。
 """
 
-import os
 import asyncio
-from typing import Dict, Optional, Callable, Type
+import os
+from typing import Callable, Dict, Optional, Type
+
+from component.redis_provider import RedisProvider
 from core.di.decorators import component
 from core.observation.logger import get_logger
-from component.redis_provider import RedisProvider
-from .redis_msg_group_queue_manager import RedisGroupQueueManager
+
 from .redis_group_queue_item import RedisGroupQueueItem, SerializationMode
+from .redis_msg_group_queue_manager import RedisGroupQueueManager
 
 logger = get_logger(__name__)
 
@@ -53,9 +55,9 @@ class RedisGroupQueueConfig:
         """
         # 排序函数使用函数名或默认值
         sort_func_name = (
-            getattr(self.sort_key_func, '__name__', 'default')
+            getattr(self.sort_key_func, "__name__", "default")
             if self.sort_key_func
-            else 'default'
+            else "default"
         )
 
         return (
@@ -66,7 +68,7 @@ class RedisGroupQueueConfig:
         )
 
     @classmethod
-    def from_env(cls, prefix: str = "") -> 'RedisGroupQueueConfig':
+    def from_env(cls, prefix: str = "") -> "RedisGroupQueueConfig":
         """
         从环境变量创建配置
 
@@ -169,7 +171,7 @@ class RedisGroupQueueManagerFactory:
             config = await self._get_default_config()
 
         # 生成缓存键，包含 item_class 信息
-        item_class_name = item_class.__name__ if item_class else 'default'
+        item_class_name = item_class.__name__ if item_class else "default"
         cache_key = f"{config.get_cache_key()}:{item_class_name}:{redis_client_name}"
 
         async with self._lock:
@@ -304,7 +306,7 @@ class RedisGroupQueueManagerFactory:
                 return
 
         # 生成缓存键，包含 item_class 信息
-        item_class_name = item_class.__name__ if item_class else 'default'
+        item_class_name = item_class.__name__ if item_class else "default"
         cache_key = f"{config.get_cache_key()}:{item_class_name}:{redis_client_name}"
 
         async with self._lock:

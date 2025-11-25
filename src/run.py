@@ -8,12 +8,14 @@ Memsys 记忆系统的主要业务应用，包含：
 - 全文写作和编辑智能体
 - 文档管理和资源处理服务
 """
+
 import argparse
-import os
 import asyncio
-import sys
-import uvicorn
 import logging
+import os
+import sys
+
+import uvicorn
 
 # 这里环境变量还没加载，所以不能使用get_logger
 logger = logging.getLogger(__name__)

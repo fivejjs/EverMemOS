@@ -4,9 +4,10 @@
 提供停用词表的加载和管理功能，支持哈工大停用词表。
 """
 
-import os
 import logging
-from typing import Set, Optional
+import os
+from typing import Optional, Set
+
 from common_utils.project_path import CURRENT_DIR
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class StopwordsManager:
             return stopwords
 
         try:
-            with open(self.stopwords_file_path, 'r', encoding='utf-8') as f:
+            with open(self.stopwords_file_path, "r", encoding="utf-8") as f:
                 for line in f:
                     word = line.strip()
                     if word:  # 跳过空行

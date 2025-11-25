@@ -2,7 +2,7 @@
 
 使用方法：
     uv run python src/bootstrap.py demo/chat_with_memory.py
-    
+
 备选方式：
     cd demo
     python chat_with_memory.py
@@ -12,6 +12,7 @@ import asyncio
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 from demo.chat import ChatOrchestrator
 
 load_dotenv()

@@ -1,7 +1,8 @@
-from enum import Enum
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
 import datetime
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from common_utils.datetime_utils import to_iso_format
 
 
@@ -27,7 +28,7 @@ class RawDataType(Enum):
     CONVERSATION = "Conversation"
 
     @classmethod
-    def from_string(cls, type_str: Optional[str]) -> Optional['RawDataType']:
+    def from_string(cls, type_str: Optional[str]) -> Optional["RawDataType"]:
         """
         将字符串类型转换为RawDataType枚举
 
@@ -86,7 +87,7 @@ class MemCell:
     episode: Optional[str] = None  # 情景记忆内容
 
     # 语义记忆联想预测字段
-    semantic_memories: Optional[List['SemanticMemoryItem']] = None  # 语义记忆联想列表
+    semantic_memories: Optional[List["SemanticMemoryItem"]] = None  # 语义记忆联想列表
     # Event Log 字段
     event_log: Optional[Any] = None  # Event Log 对象
     # extend fields, can be used to store any additional information
@@ -124,9 +125,12 @@ class MemCell:
                 else None
             ),
             "event_log": (
-                self.event_log.to_dict() if hasattr(self.event_log, 'to_dict')
+                self.event_log.to_dict()
+                if hasattr(self.event_log, "to_dict")
                 else self.event_log
-            ) if self.event_log else None,
+            )
+            if self.event_log
+            else None,
             "extend": self.extend,
         }
 
@@ -156,7 +160,7 @@ class Memory:
 
     memcell_event_id_list: Optional[List[str]] = None
     # 语义记忆联想预测字段
-    semantic_memories: Optional[List['SemanticMemoryItem']] = None  # 语义记忆联想列表
+    semantic_memories: Optional[List["SemanticMemoryItem"]] = None  # 语义记忆联想列表
     extend: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
@@ -173,7 +177,7 @@ class Memory:
                     timestamp_str = to_iso_format(self.timestamp)
                 except Exception:
                     timestamp_str = str(self.timestamp) if self.timestamp else None
-        
+
         return {
             "memory_type": self.memory_type.value if self.memory_type else None,
             "user_id": self.user_id,

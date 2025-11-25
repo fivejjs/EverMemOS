@@ -6,8 +6,9 @@ Redis分组队列项接口
 
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Dict
 from enum import Enum
+from typing import Any, Dict
+
 import bson
 
 
@@ -33,7 +34,7 @@ class RedisGroupQueueItem(ABC):
 
     @classmethod
     @abstractmethod
-    def from_json_str(cls, json_str: str) -> 'RedisGroupQueueItem':
+    def from_json_str(cls, json_str: str) -> "RedisGroupQueueItem":
         """
         从JSON字符串创建对象实例
 
@@ -50,7 +51,7 @@ class RedisGroupQueueItem(ABC):
 
     @classmethod
     @abstractmethod
-    def from_bson_bytes(cls, bson_bytes: bytes) -> 'RedisGroupQueueItem':
+    def from_bson_bytes(cls, bson_bytes: bytes) -> "RedisGroupQueueItem":
         """
         从BSON字节数据反序列化对象
 
@@ -103,7 +104,7 @@ class SimpleQueueItem(RedisGroupQueueItem):
         return {"data": self.data, "item_type": self.item_type}
 
     @classmethod
-    def from_json_str(cls, json_str: str) -> 'SimpleQueueItem':
+    def from_json_str(cls, json_str: str) -> "SimpleQueueItem":
         """从JSON字符串创建实例"""
         try:
             json_dict = json.loads(json_str)
@@ -114,7 +115,7 @@ class SimpleQueueItem(RedisGroupQueueItem):
             raise ValueError(f"无效的JSON数据: {e}") from e
 
     @classmethod
-    def from_bson_bytes(cls, bson_bytes: bytes) -> 'SimpleQueueItem':
+    def from_bson_bytes(cls, bson_bytes: bytes) -> "SimpleQueueItem":
         """从BSON字节数据创建实例"""
         try:
             data = bson.decode(bson_bytes)

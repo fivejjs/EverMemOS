@@ -71,4 +71,3 @@ Question: {question}
 
 Now, follow the Chain-of-Thought process above to answer the question:
 """
-

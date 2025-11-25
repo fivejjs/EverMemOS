@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, TypeVar, Generic, Type
-from core.oxm.pg.audit_base import get_auditable_model
+from typing import Generic, List, Optional, Type, TypeVar
+
 from core.di.decorators import repository
+from core.oxm.pg.audit_base import get_auditable_model
 
 # 定义泛型类型
-T = TypeVar('T', bound=get_auditable_model())
+T = TypeVar("T", bound=get_auditable_model())
 
 
 class BaseSoftDeleteRepository(Generic[T], ABC):

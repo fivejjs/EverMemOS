@@ -1,4 +1,4 @@
-from elasticsearch.dsl import tokenizer, normalizer, token_filter, analyzer
+from elasticsearch.dsl import analyzer, normalizer, token_filter, tokenizer
 
 # ================================
 # Token Filters 定义
@@ -59,7 +59,9 @@ edge_tokenizer = tokenizer(
 # 例如："Elasticsearch" -> ["e", "el", "ela", "elas", "elast", ..., "elasticsearch"]
 # 适合：输入时实时搜索、前缀匹配
 edge_analyzer = analyzer(
-    "edge_analyzer", tokenizer=edge_tokenizer, filter=["lowercase"]  # 转换为小写
+    "edge_analyzer",
+    tokenizer=edge_tokenizer,
+    filter=["lowercase"],  # 转换为小写
 )
 
 # ================================
@@ -97,7 +99,9 @@ lower_normalizer = normalizer(
 # 例如："running", "runs", "ran" -> "run"
 #      "better", "good" -> "good", "better"（不规则变化需要特殊处理）
 snow_en_filter = token_filter(
-    "snow_filter", type="snowball", language="English"  # 英文词干提取
+    "snow_filter",
+    type="snowball",
+    language="English",  # 英文词干提取
 )
 
 # 英文词干分析器 - 用于英文文本的语义搜索

@@ -6,17 +6,18 @@
 支持个人和群组事件日志。
 """
 
-from pymilvus import DataType, FieldSchema, CollectionSchema
+from pymilvus import CollectionSchema, DataType, FieldSchema
+
 from core.oxm.milvus.milvus_collection_base import (
-    MilvusCollectionWithSuffix,
     IndexConfig,
+    MilvusCollectionWithSuffix,
 )
 
 
 class EventLogCollection(MilvusCollectionWithSuffix):
     """
     事件日志 Milvus Collection
-    
+
     存储原子事实（atomic facts），支持细粒度的事实检索。
     同时支持个人和群组事件日志，通过 group_id 字段区分。
 
@@ -126,11 +127,11 @@ class EventLogCollection(MilvusCollectionWithSuffix):
         ),
         # 标量字段索引（用于过滤）
         IndexConfig(
-            field_name="user_id", index_type="AUTOINDEX"  # 自动选择最适合的索引类型
+            field_name="user_id",
+            index_type="AUTOINDEX",  # 自动选择最适合的索引类型
         ),
         IndexConfig(field_name="group_id", index_type="AUTOINDEX"),
         IndexConfig(field_name="parent_episode_id", index_type="AUTOINDEX"),
         IndexConfig(field_name="event_type", index_type="AUTOINDEX"),
         IndexConfig(field_name="timestamp", index_type="AUTOINDEX"),
     ]
-

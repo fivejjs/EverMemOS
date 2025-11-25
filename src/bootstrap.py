@@ -18,16 +18,17 @@ Memsys Bootstrap Script - 通用的上下文加载器和脚本运行器
     python src/bootstrap.py evaluation/dynamic_memory_evaluation/locomo_eval.py --dataset small
 """
 
-import sys
-import runpy
 import argparse
 import os
+import runpy
+import sys
+
 import nest_asyncio
 
 nest_asyncio.apply()
 import asyncio
-from pathlib import Path
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ def file_path_to_module_name(target_path: Path, src_path: Path) -> str:
             # 如果在 src 目录下，相对于 src 目录计算
             relative_path = target_path.relative_to(src_path)
             module_name = (
-                str(relative_path.with_suffix('')).replace('/', '.').replace('\\', '.')
+                str(relative_path.with_suffix("")).replace("/", ".").replace("\\", ".")
             )
             return module_name
         else:
@@ -61,7 +62,7 @@ def file_path_to_module_name(target_path: Path, src_path: Path) -> str:
             project_root = src_path.parent
             relative_path = target_path.relative_to(project_root)
             module_name = (
-                str(relative_path.with_suffix('')).replace('/', '.').replace('\\', '.')
+                str(relative_path.with_suffix("")).replace("/", ".").replace("\\", ".")
             )
             return module_name
     except ValueError:
@@ -69,7 +70,7 @@ def file_path_to_module_name(target_path: Path, src_path: Path) -> str:
         try:
             relative_path = target_path.relative_to(Path.cwd())
             module_name = (
-                str(relative_path.with_suffix('')).replace('/', '.').replace('\\', '.')
+                str(relative_path.with_suffix("")).replace("/", ".").replace("\\", ".")
             )
             return module_name
         except ValueError:
@@ -143,7 +144,7 @@ async def async_main():
 
     parser.add_argument("script_path", help="要运行的 Python 脚本路径")
     parser.add_argument(
-        'script_args', nargs=argparse.REMAINDER, help="传递给目标脚本的参数"
+        "script_args", nargs=argparse.REMAINDER, help="传递给目标脚本的参数"
     )
     parser.add_argument(
         "--env-file",

@@ -1,13 +1,15 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from motor.motor_asyncio import AsyncIOMotorClientSession
+from typing import Any, Dict, List, Optional
+
 from beanie import PydanticObjectId
+from motor.motor_asyncio import AsyncIOMotorClientSession
+
+from core.di.decorators import repository
+from core.observation.logger import get_logger
 from core.oxm.mongo.base_repository import BaseRepository
 from infra_layer.adapters.out.persistence.document.memory.behavior_history import (
     BehaviorHistory,
 )
-from core.observation.logger import get_logger
-from core.di.decorators import repository
 
 logger = get_logger(__name__)
 

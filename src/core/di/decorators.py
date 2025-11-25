@@ -3,12 +3,12 @@
 依赖注入装饰器
 """
 
-from typing import Type, TypeVar, Optional, Callable, Any
 from functools import wraps
+from typing import Any, Callable, Optional, Type, TypeVar
 
-from core.di.container import get_container, BeanScope
+from core.di.container import BeanScope, get_container
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def component(
@@ -34,7 +34,7 @@ def component(
         cls._di_primary = primary
 
         # 检查是否被标记为跳过（通过conditional装饰器）
-        if getattr(cls, '_di_skip', False):
+        if getattr(cls, "_di_skip", False):
             return cls
 
         if not lazy:
@@ -116,7 +116,7 @@ def mock_impl(
             bean_type=cls,
             bean_name=name,
             scope=scope,
-            is_primary=getattr(cls, '_di_primary', False),
+            is_primary=getattr(cls, "_di_primary", False),
             is_mock=True,
         )
 
@@ -136,7 +136,7 @@ def factory(bean_type: Type[T] = None, name: str = None, lazy: bool = False):
     """
 
     def decorator(func: Callable[[], T]) -> Callable[[], T]:
-        target_type = bean_type or func.__annotations__.get('return', None)
+        target_type = bean_type or func.__annotations__.get("return", None)
 
         if not target_type:
             raise ValueError("Factory装饰器必须指定返回类型")
@@ -165,13 +165,13 @@ def prototype(cls: Type[T]) -> Type[T]:
     cls._di_scope = BeanScope.PROTOTYPE
 
     # 如果已经是组件，更新作用域
-    if hasattr(cls, '_di_component'):
+    if hasattr(cls, "_di_component"):
         container = get_container()
         container.register_bean(
             bean_type=cls,
-            bean_name=getattr(cls, '_di_name', None),
+            bean_name=getattr(cls, "_di_name", None),
             scope=BeanScope.PROTOTYPE,
-            is_primary=getattr(cls, '_di_primary', False),
+            is_primary=getattr(cls, "_di_primary", False),
         )
 
     return cls

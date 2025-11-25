@@ -7,9 +7,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from datetime import datetime
 
 
 class RetrieveMethod(str, Enum):
@@ -70,7 +70,7 @@ class Metadata:
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Metadata':
+    def from_dict(cls, data: Dict[str, Any]) -> "Metadata":
         """从字典创建 Metadata 对象"""
         return cls(**{k: v for k, v in data.items() if k in cls.__annotations__})
 

@@ -6,19 +6,21 @@ Agentic Layer V2 控制器
 
 import logging
 from typing import Any, Dict
-from fastapi import HTTPException, Request as FastAPIRequest
 
-from agentic_layer.schemas import RetrieveMethod
-from core.di.decorators import controller
-from core.interface.controller.base_controller import BaseController, post
-from agentic_layer.memory_manager import MemoryManager
+from fastapi import HTTPException
+from fastapi import Request as FastAPIRequest
+
 from agentic_layer.converter import (
+    _handle_conversation_format,
     convert_dict_to_fetch_mem_request,
     convert_dict_to_retrieve_mem_request,
 )
-from agentic_layer.dtos.memory_query import RetrieveMemRequest, RetrieveMemRequest
+from agentic_layer.dtos.memory_query import RetrieveMemRequest
+from agentic_layer.memory_manager import MemoryManager
+from agentic_layer.schemas import RetrieveMethod
 from core.constants.errors import ErrorCode, ErrorStatus
-from agentic_layer.converter import _handle_conversation_format
+from core.di.decorators import controller
+from core.interface.controller.base_controller import BaseController, post
 
 logger = logging.getLogger(__name__)
 

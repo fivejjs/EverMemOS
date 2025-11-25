@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Mapping, Optional, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence
+
 from memory_layer.memory_manager import MemorizeRequest
 
 if TYPE_CHECKING:
-    from .dtos.memory_query import FetchMemRequest
-    from .dtos.memory_query import RetrieveMemRequest
+    from .dtos.memory_query import FetchMemRequest, RetrieveMemRequest
 
 """
 本文件中的各类RawData结构是需要与Memorize方法的输入结构一致
@@ -224,10 +224,10 @@ class Request:
     # Fields for MEMORIZE REQTYPE
     memorize_request: Optional[MemorizeRequest] = None
     # Fields for FETCH_MEM REQTYPE
-    fetch_mem_request: Optional['FetchMemRequest'] = None
+    fetch_mem_request: Optional["FetchMemRequest"] = None
 
     # Fields for RETRIEVE REQTYPE
-    retrieve_mem_request: Optional['RetrieveMemRequest'] = None
+    retrieve_mem_request: Optional["RetrieveMemRequest"] = None
     override_keys: Optional[Sequence[str]] = None  # 废弃
 
     source: AppType = (

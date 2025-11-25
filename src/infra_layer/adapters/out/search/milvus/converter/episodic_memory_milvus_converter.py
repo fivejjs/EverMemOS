@@ -5,16 +5,16 @@
 主要处理字段映射、向量构建和数据格式转换。
 """
 
-from typing import Dict, Any
 import json
+from typing import Any, Dict
 
-from core.oxm.milvus.base_converter import BaseMilvusConverter
 from core.observation.logger import get_logger
-from infra_layer.adapters.out.search.milvus.memory.episodic_memory_collection import (
-    EpisodicMemoryCollection,
-)
+from core.oxm.milvus.base_converter import BaseMilvusConverter
 from infra_layer.adapters.out.persistence.document.memory.episodic_memory import (
     EpisodicMemory as MongoEpisodicMemory,
+)
+from infra_layer.adapters.out.search.milvus.memory.episodic_memory_collection import (
+    EpisodicMemoryCollection,
 )
 
 logger = get_logger(__name__)
@@ -63,12 +63,14 @@ class EpisodicMemoryMilvusConverter(BaseMilvusConverter[EpisodicMemoryCollection
                 # 基础标识字段
                 "id": (
                     str(source_doc.event_id)
-                    if hasattr(source_doc, 'event_id') and source_doc.event_id
+                    if hasattr(source_doc, "event_id") and source_doc.event_id
                     else ""
                 ),
                 "user_id": source_doc.user_id,
-                "group_id": getattr(source_doc, 'group_id', ""),
-                "participants": getattr(source_doc, 'participants', []),  # 添加 participants
+                "group_id": getattr(source_doc, "group_id", ""),
+                "participants": getattr(
+                    source_doc, "participants", []
+                ),  # 添加 participants
                 # 时间字段 - 转换为 Unix 时间戳
                 "timestamp": timestamp,
                 # 核心内容字段
@@ -77,7 +79,7 @@ class EpisodicMemoryMilvusConverter(BaseMilvusConverter[EpisodicMemoryCollection
                 # 分类字段
                 "event_type": (
                     str(source_doc.type)
-                    if hasattr(source_doc, 'type') and source_doc.type
+                    if hasattr(source_doc, "type") and source_doc.type
                     else ""
                 ),
                 # 详细信息 JSON
@@ -96,7 +98,7 @@ class EpisodicMemoryMilvusConverter(BaseMilvusConverter[EpisodicMemoryCollection
                 # 向量字段 - 需要外部设置
                 "vector": (
                     source_doc.vector
-                    if hasattr(source_doc, 'vector') and source_doc.vector
+                    if hasattr(source_doc, "vector") and source_doc.vector
                     else []
                 ),
             }
@@ -123,19 +125,19 @@ class EpisodicMemoryMilvusConverter(BaseMilvusConverter[EpisodicMemoryCollection
         """
         detail = {
             # 用户信息
-            "user_name": getattr(source_doc, 'user_name', None),
+            "user_name": getattr(source_doc, "user_name", None),
             # 内容相关
-            "title": getattr(source_doc, 'subject', None),
-            "summary": getattr(source_doc, 'summary', None),
+            "title": getattr(source_doc, "subject", None),
+            "summary": getattr(source_doc, "summary", None),
             # 分类和标签
-            "participants": getattr(source_doc, 'participants', None),
-            "keywords": getattr(source_doc, 'keywords', None),
-            "linked_entities": getattr(source_doc, 'linked_entities', None),
+            "participants": getattr(source_doc, "participants", None),
+            "keywords": getattr(source_doc, "keywords", None),
+            "linked_entities": getattr(source_doc, "linked_entities", None),
             # MongoDB 特有字段
-            "subject": getattr(source_doc, 'subject', None),
-            "memcell_event_id_list": getattr(source_doc, 'memcell_event_id_list', None),
+            "subject": getattr(source_doc, "subject", None),
+            "memcell_event_id_list": getattr(source_doc, "memcell_event_id_list", None),
             # 扩展字段
-            "extend": getattr(source_doc, 'extend', None),
+            "extend": getattr(source_doc, "extend", None),
         }
 
         # 过滤掉 None 值
@@ -157,13 +159,13 @@ class EpisodicMemoryMilvusConverter(BaseMilvusConverter[EpisodicMemoryCollection
         text_content = []
 
         # 收集所有文本内容（按优先级：主题 -> 摘要 -> 内容）
-        if hasattr(source_doc, 'subject') and source_doc.subject:
+        if hasattr(source_doc, "subject") and source_doc.subject:
             text_content.append(source_doc.subject)
 
-        if hasattr(source_doc, 'summary') and source_doc.summary:
+        if hasattr(source_doc, "summary") and source_doc.summary:
             text_content.append(source_doc.summary)
 
-        if hasattr(source_doc, 'episode') and source_doc.episode:
+        if hasattr(source_doc, "episode") and source_doc.episode:
             # episode 可能很长，只取前 500 字符
             text_content.append(source_doc.episode[:500])
 

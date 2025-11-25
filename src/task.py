@@ -20,8 +20,8 @@ Task Worker - 异步任务处理器启动脚本
     REDIS_USERNAME: Redis用户名 (可选)
 """
 
-import os
 import logging
+import os
 
 from arq.connections import RedisSettings
 

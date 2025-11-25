@@ -1,10 +1,12 @@
-import typing
-from typing import Type, Any, Dict
-
 import os
-from fnmatch import fnmatch
+import typing
 from datetime import datetime
-from elasticsearch.dsl import MetaField, AsyncDocument, field as e_field
+from fnmatch import fnmatch
+from typing import Any, Dict, Type
+
+from elasticsearch.dsl import AsyncDocument, MetaField
+from elasticsearch.dsl import field as e_field
+
 from common_utils.datetime_utils import get_now_with_timezone, to_timezone
 
 

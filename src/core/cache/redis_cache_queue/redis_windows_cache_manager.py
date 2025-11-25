@@ -8,15 +8,15 @@ Redis 时间窗口缓存管理器
 - 随机清理过期数据
 """
 
-import time
 import random
-from typing import List, Dict, Any, Optional, Union
-
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
+from component.redis_provider import RedisProvider
 from core.di.decorators import component
 from core.observation.logger import get_logger
-from component.redis_provider import RedisProvider
+
 from .redis_data_processor import RedisDataProcessor
 
 # 配置常量
@@ -77,7 +77,7 @@ class RedisWindowsCacheFactory:
         self,
         expire_minutes: int = DEFAULT_EXPIRE_MINUTES,
         cleanup_probability: float = DEFAULT_CLEANUP_PROBABILITY,
-    ) -> 'RedisWindowsCacheManager':
+    ) -> "RedisWindowsCacheManager":
         """
         创建缓存管理器实例
 
@@ -174,7 +174,7 @@ class RedisWindowsCacheManager:
 
             # 清理过期数据
             cleaned_count = await client.zremrangebyscore(
-                key, '-inf', cleanup_threshold
+                key, "-inf", cleanup_threshold
             )
 
             if cleaned_count > 0:
@@ -334,7 +334,7 @@ class RedisWindowsCacheManager:
 
             # 清理过期数据
             cleaned_count = await client.zremrangebyscore(
-                key, '-inf', cleanup_threshold
+                key, "-inf", cleanup_threshold
             )
 
             if cleaned_count > 0:
@@ -418,7 +418,7 @@ class RedisWindowsCacheManager:
                     # 安全地转换分数为时间戳
                     try:
                         if isinstance(score_raw, bytes):
-                            score_str = score_raw.decode('utf-8')
+                            score_str = score_raw.decode("utf-8")
                         else:
                             score_str = str(score_raw)
                         timestamp = int(float(score_str))

@@ -8,13 +8,13 @@
 import asyncio
 import hashlib
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import deque
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from core.observation.logger import get_logger
 from common_utils.datetime_utils import get_now_with_timezone, to_iso_format
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -204,7 +204,7 @@ class MsgGroupQueueManager:
             int: 队列编号 (0 到 num_queues-1)
         """
         # 使用MD5哈希确保分布均匀
-        hash_obj = hashlib.md5(group_key.encode('utf-8'))
+        hash_obj = hashlib.md5(group_key.encode("utf-8"))
         hash_int = int(hash_obj.hexdigest(), 16)
         return hash_int % self.num_queues
 
@@ -297,7 +297,7 @@ class MsgGroupQueueManager:
         """
         if queue_id < 0 or queue_id >= self.num_queues:
             raise ValueError(
-                f"队列编号超出范围: {queue_id}, 有效范围: 0-{self.num_queues-1}"
+                f"队列编号超出范围: {queue_id}, 有效范围: 0-{self.num_queues - 1}"
             )
 
         target_queue = self._queues[queue_id]
@@ -387,7 +387,7 @@ class MsgGroupQueueManager:
             if queue_id is not None:
                 if queue_id < 0 or queue_id >= self.num_queues:
                     raise ValueError(
-                        f"队列编号超出范围: {queue_id}, 有效范围: 0-{self.num_queues-1}"
+                        f"队列编号超出范围: {queue_id}, 有效范围: 0-{self.num_queues - 1}"
                     )
                 return self._queue_stats[queue_id].to_dict()
             else:
@@ -467,17 +467,25 @@ class MsgGroupQueueManager:
         # 更新每个队列的时间窗口统计
         for i in range(self.num_queues):
             # 清理旧事件并统计
-            self._queue_stats[i].time_window_stats.delivered_1min = (
-                self._count_events_in_window(self._delivery_events[i], 60.0)
+            self._queue_stats[
+                i
+            ].time_window_stats.delivered_1min = self._count_events_in_window(
+                self._delivery_events[i], 60.0
             )
-            self._queue_stats[i].time_window_stats.consumed_1min = (
-                self._count_events_in_window(self._consume_events[i], 60.0)
+            self._queue_stats[
+                i
+            ].time_window_stats.consumed_1min = self._count_events_in_window(
+                self._consume_events[i], 60.0
             )
-            self._queue_stats[i].time_window_stats.delivered_1hour = (
-                self._count_events_in_window(self._delivery_events[i], 3600.0)
+            self._queue_stats[
+                i
+            ].time_window_stats.delivered_1hour = self._count_events_in_window(
+                self._delivery_events[i], 3600.0
             )
-            self._queue_stats[i].time_window_stats.consumed_1hour = (
-                self._count_events_in_window(self._consume_events[i], 3600.0)
+            self._queue_stats[
+                i
+            ].time_window_stats.consumed_1hour = self._count_events_in_window(
+                self._consume_events[i], 3600.0
             )
 
         # 更新管理器的时间窗口统计

@@ -1,7 +1,7 @@
 """Data processing utilities for group profile extraction."""
 
-from typing import Any, Dict, List, Optional, Set
 import re
+from typing import Any, Dict, List, Optional, Set
 
 from core.observation.logger import get_logger
 
@@ -75,11 +75,11 @@ class GroupProfileDataProcessor:
             # 构建 memcell 参与者映射
             memcell_participants = {}
             for memcell in memcell_list:
-                if hasattr(memcell, 'event_id'):
+                if hasattr(memcell, "event_id"):
                     memcell_id = str(memcell.event_id)
                     participants = (
                         set(memcell.participants)
-                        if hasattr(memcell, 'participants') and memcell.participants
+                        if hasattr(memcell, "participants") and memcell.participants
                         else set()
                     )
                     memcell_participants[memcell_id] = participants
@@ -132,6 +132,7 @@ class GroupProfileDataProcessor:
             合并、去重后的 memcell_ids（历史顺序不变，新的按时间排序追加，最多 max_count 个）
         """
         from common_utils.datetime_utils import get_now_with_timezone
+
         from ..group_profile_memory_extractor import convert_to_datetime
 
         historical = historical or []
@@ -145,7 +146,7 @@ class GroupProfileDataProcessor:
         # 构建 memcell_id 到 timestamp 的映射（用于对新的 memcell_ids 排序）
         memcell_id_to_timestamp = {}
         for memcell in memcell_list:
-            if hasattr(memcell, 'event_id') and hasattr(memcell, 'timestamp'):
+            if hasattr(memcell, "event_id") and hasattr(memcell, "timestamp"):
                 # 转换为字符串以匹配 LLM 输出的格式
                 memcell_id = str(memcell.event_id)
                 timestamp = convert_to_datetime(memcell.timestamp)
@@ -196,10 +197,10 @@ class GroupProfileDataProcessor:
         # 1. 从当前memcell构建映射
         current_mapping = {}
         for memcell in memcell_list:
-            if hasattr(memcell, 'original_data') and memcell.original_data:
+            if hasattr(memcell, "original_data") and memcell.original_data:
                 for data in memcell.original_data:
-                    speaker_id = data.get('speaker_id', '')
-                    speaker_name = data.get('speaker_name', '')
+                    speaker_id = data.get("speaker_id", "")
+                    speaker_name = data.get("speaker_name", "")
                     if speaker_id and speaker_name:
                         current_mapping[speaker_id] = {
                             "user_id": speaker_id,
@@ -235,24 +236,24 @@ class GroupProfileDataProcessor:
         """Convert raw data to conversation text format."""
         lines = []
         for data in data_list:
-            if hasattr(data, 'content'):
-                speaker_name = data.content.get('speaker_name', '')
-                speaker_id = data.content.get('speaker_id', '')
+            if hasattr(data, "content"):
+                speaker_name = data.content.get("speaker_name", "")
+                speaker_id = data.content.get("speaker_id", "")
                 speaker = (
                     f"{speaker_name}(user_id:{speaker_id})"
                     if speaker_id
                     else speaker_name
                 )
-                content = data.content.get('content')
+                content = data.content.get("content")
             else:
-                speaker_name = data.get('speaker_name', '')
-                speaker_id = data.get('speaker_id', '')
+                speaker_name = data.get("speaker_name", "")
+                speaker_id = data.get("speaker_id", "")
                 speaker = (
                     f"{speaker_name}(user_id:{speaker_id})"
                     if speaker_id
                     else speaker_name
                 )
-                content = data.get('content')
+                content = data.get("content")
 
             if not content:
                 continue
@@ -262,7 +263,7 @@ class GroupProfileDataProcessor:
 
     def get_episode_text(self, memcell) -> str:
         """Extract episode text from memcell."""
-        if hasattr(memcell, 'episode') and memcell.episode:
+        if hasattr(memcell, "episode") and memcell.episode:
             return memcell.episode
         return ""
 
@@ -272,7 +273,7 @@ class GroupProfileDataProcessor:
 
         for memcell in memcell_list:
             # 确保 memcell_id 是字符串（处理 MongoDB ObjectId）
-            raw_id = getattr(memcell, 'event_id', f'unknown_{id(memcell)}')
+            raw_id = getattr(memcell, "event_id", f"unknown_{id(memcell)}")
             memcell_id = str(raw_id)
 
             if self.conversation_source == "original":
@@ -318,6 +319,7 @@ class GroupProfileDataProcessor:
         Returns separate fields for easier processing.
         """
         from datetime import datetime
+
         from ...types import MemoryType
 
         if not old_memory_list:
@@ -334,12 +336,12 @@ class GroupProfileDataProcessor:
                 topics_list = []
                 if existing_topics:
                     for topic in existing_topics:
-                        if hasattr(topic, '__dict__'):
+                        if hasattr(topic, "__dict__"):
                             topic_dict = topic.__dict__.copy()
                             # Convert datetime to ISO string
-                            if isinstance(topic_dict.get('last_active_at'), datetime):
-                                topic_dict['last_active_at'] = topic_dict[
-                                    'last_active_at'
+                            if isinstance(topic_dict.get("last_active_at"), datetime):
+                                topic_dict["last_active_at"] = topic_dict[
+                                    "last_active_at"
                                 ].isoformat()
                             topics_list.append(topic_dict)
                         elif isinstance(topic, dict):

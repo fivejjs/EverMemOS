@@ -1,20 +1,19 @@
 import asyncio
 import os
-from typing import Dict, Any, List, Optional, AsyncGenerator, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from core.di.decorators import component
-from core.observation.logger import get_logger
 from component.config_provider import ConfigProvider
-
-from component.llm_adapter.llm.message import ChatMessage
+from component.llm_adapter.llm.anthropic_adapter import AnthropicAdapter
 from component.llm_adapter.llm.completion import (
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
-from component.llm_adapter.llm.llm_backend_adapter import LLMBackendAdapter
-from component.llm_adapter.llm.openai_adapter import OpenAIAdapter
-from component.llm_adapter.llm.anthropic_adapter import AnthropicAdapter
 from component.llm_adapter.llm.gemini_adapter import GeminiAdapter
+from component.llm_adapter.llm.llm_backend_adapter import LLMBackendAdapter
+from component.llm_adapter.llm.message import ChatMessage
+from component.llm_adapter.llm.openai_adapter import OpenAIAdapter
+from core.di.decorators import component
+from core.observation.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -218,7 +217,7 @@ class OpenAICompatibleClient:
             if "api_key" in safe_config:
                 safe_config["api_key"] = (
                     f"***{safe_config['api_key'][-4:]}"
-                    if len(safe_config.get('api_key', '')) > 4
+                    if len(safe_config.get("api_key", "")) > 4
                     else "***"
                 )
             return safe_config
@@ -233,7 +232,7 @@ class OpenAICompatibleClient:
     async def close(self):
         """关闭所有适配器的HTTP客户端连接"""
         for adapter in self._adapters.values():
-            if hasattr(adapter, 'close'):
+            if hasattr(adapter, "close"):
                 await adapter.close()  # type: ignore
 
     def close_sync(self):

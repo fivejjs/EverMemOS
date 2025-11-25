@@ -5,13 +5,14 @@ PersonalEventLog Beanie ODM 模型
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
-from beanie import Indexed
-from core.oxm.mongo.document_base import DocumentBase
-from pydantic import Field, ConfigDict
-from pymongo import IndexModel, ASCENDING, DESCENDING
+from typing import Any, Dict, List, Optional
+
+from beanie import Indexed, PydanticObjectId
+from pydantic import ConfigDict, Field
+from pymongo import ASCENDING, DESCENDING, IndexModel
+
 from core.oxm.mongo.audit_base import AuditBase
-from beanie import PydanticObjectId
+from core.oxm.mongo.document_base import DocumentBase
 
 
 class PersonalEventLog(DocumentBase, AuditBase):
@@ -35,11 +36,15 @@ class PersonalEventLog(DocumentBase, AuditBase):
     participants: Optional[List[str]] = Field(default=None, description="相关参与者")
 
     # 向量和模型
-    vector: Optional[List[float]] = Field(default=None, description="原子事实的文本向量")
+    vector: Optional[List[float]] = Field(
+        default=None, description="原子事实的文本向量"
+    )
     vector_model: Optional[str] = Field(default=None, description="使用的向量化模型")
 
     # 事件类型和扩展信息
-    event_type: Optional[str] = Field(default=None, description="事件类型，如 Conversation")
+    event_type: Optional[str] = Field(
+        default=None, description="事件类型，如 Conversation"
+    )
     extend: Optional[Dict[str, Any]] = Field(default=None, description="扩展字段")
 
     model_config = ConfigDict(
@@ -57,7 +62,7 @@ class PersonalEventLog(DocumentBase, AuditBase):
                 "vector": [0.1, 0.2, 0.3],
                 "vector_model": "text-embedding-3-small",
                 "event_type": "Conversation",
-                "extend": {"location": "成都"}
+                "extend": {"location": "成都"},
             }
         },
     )
@@ -111,4 +116,3 @@ class PersonalEventLog(DocumentBase, AuditBase):
 
 # 导出模型
 __all__ = ["PersonalEventLog"]
-
