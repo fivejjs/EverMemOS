@@ -108,12 +108,12 @@ class OpenAIProvider(LLMProvider):
         # print(data)
         # print(data["extra_body"])
         # Add max_tokens if specified
-
+        # uncomment for openrouter
         # if max_tokens is not None:
         #     data["max_tokens"] = max_tokens
         # elif self.max_tokens is not None:
         #     data["max_tokens"] = self.max_tokens
-
+        # for openai parameter
         data["max_completion_tokens"] = self.max_tokens
 
         # 使用异步的 aiohttp 替代同步的 urllib
